@@ -131,13 +131,13 @@ const ShareBillApp = () => {
                 </div>
               </Tab.Panel>
               <Tab.Panel>
-                <div className="flex flex-col px-2 pt-2">
-                  <div className="flex my-4">
+                <div className="grid grid-cols-1 divide-y pt-2 px-2">
+                  <div className="flex my-4 items-center">
                     <div className="w-4/6 text-zinc-500">ชื่อคน</div>
                     <div className="w-1/6 text-zinc-500 text-right">จ่าย</div>
                     <div className="w-1/6 text-zinc-500 text-right">&nbsp;</div>
                   </div>
-                  <div className="flex my-3">
+                  <div className="flex py-3 items-center">
                     <div className="w-4/6 text-zinc-600 font-bold break-words">
                       aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
                     </div>
@@ -145,31 +145,48 @@ const ShareBillApp = () => {
                       50
                     </div>
                     <div className="w-1/6 text-zinc-500 flex justify-end">
-                      <VscListSelection />
+                      <button>
+                        <VscListSelection />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 my-4">
-                    <input
-                      className="outline-none border-b-2 w-5/6 text-zinc-500"
-                      placeholder="ระบุรายการ"
-                    />
-                    <button
-                      type="button"
-                      className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 grow"
-                    >
-                      เพิ่ม
-                    </button>
+                  <div className="flex py-3 items-center">
+                    <div className="w-4/6 text-zinc-600 font-bold break-words">
+                      aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                    </div>
+                    <div className="w-1/6 text-zinc-600 text-xl text-right">
+                      50
+                    </div>
+                    <div className="w-1/6 text-zinc-500 flex justify-end">
+                      <button>
+                        <VscListSelection />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex w-full justify-between flex-wrap items-center my-4">
-                    <button className="text-red-500 my-4 flex grow">
-                      ล้างรายชื่อทั้งหมด
-                    </button>
-                    <input
-                      type="text"
-                      className="outline-none border-b-2 leading-4 h-4"
-                      placeholder="เบอร์โทรศัพท์ Promptpay"
-                    />
-                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 py-4">
+                  <input
+                    className="outline-none border-b-2 w-5/6 text-zinc-500"
+                    placeholder="ระบุชื่อ"
+                  />
+                  <button
+                    type="button"
+                    className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 grow"
+                  >
+                    เพิ่ม
+                  </button>
+                </div>
+
+                <div className="flex w-full justify-between flex-wrap items-center py-4">
+                  <button className="text-red-500 my-4 flex grow">
+                    ล้างรายชื่อทั้งหมด
+                  </button>
+                  <input
+                    type="text"
+                    className="outline-none border-b-2 leading-4 h-4"
+                    placeholder="เบอร์โทรศัพท์ Promptpay"
+                  />
                 </div>
               </Tab.Panel>
             </Tab.Panels>
