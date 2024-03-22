@@ -32,7 +32,7 @@ const ShareBillApp = () => {
           </div>
         </div>
         <div className="w-full mt-6">
-          <Tab.Group defaultIndex={1}>
+          <Tab.Group defaultIndex={0}>
             <Tab.List className={"w-full grid grid-cols-2 "}>
               <Tab
                 key={"1"}
@@ -65,16 +65,16 @@ const ShareBillApp = () => {
             </Tab.List>
             <Tab.Panels>
               <Tab.Panel>
-                <div className="flex flex-col px-2 pt-2">
-                  <div className="flex my-4">
-                    <div className="w-4/6 text-zinc-500">ชื่อรายการ</div>
-                    <div className="w-1/6 text-zinc-500 text-right">ราคา</div>
-                    <div className="w-1/6 text-zinc-500 text-right">คนละ</div>
-                  </div>
-                  <div className="flex my-3">
+                <div className="flex pt-4 px-2">
+                  <div className="w-4/6 text-zinc-500">ชื่อรายการ</div>
+                  <div className="w-1/6 text-zinc-500 text-right">ราคา</div>
+                  <div className="w-1/6 text-zinc-500 text-right">คนละ</div>
+                </div>
+                <div className="grid grid-cols-1 divide-y px-2">
+                  <div className="flex py-3 items-center">
                     <div className="w-4/6 text-zinc-600 font-bold break-words">
                       aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap justify-start gap-2">
                         <span className="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
                           Default
                         </span>
@@ -106,37 +106,108 @@ const ShareBillApp = () => {
                     </div>
                     <div className="w-1/6 text-zinc-500 text-right">25</div>
                   </div>
-                  <div className="flex items-center gap-2 my-4">
-                    <input
-                      className="outline-none border-b-2 w-5/6 text-zinc-500"
-                      placeholder="ระบุรายการ"
-                    />
-                    <button
-                      type="button"
-                      className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 grow"
-                    >
-                      เพิ่ม
-                    </button>
+                  <div className="flex py-3 items-center">
+                    <div className="w-4/6 text-zinc-600 font-bold break-words">
+                      aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                      <div className="flex flex-wrap justify-start gap-2">
+                        <span className="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+                          Default
+                        </span>
+                        <span className="bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">
+                          Dark
+                        </span>
+                        <span className="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">
+                          Red
+                        </span>
+                        <span className="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">
+                          Green
+                        </span>
+                        <span className="bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-yellow-900 dark:text-yellow-300">
+                          Yellow
+                        </span>
+                        <span className="bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-indigo-900 dark:text-indigo-300">
+                          Indigo
+                        </span>
+                        <span className="bg-purple-100 text-purple-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-purple-900 dark:text-purple-300">
+                          Purple
+                        </span>
+                        <span className="bg-pink-100 text-pink-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-pink-900 dark:text-pink-300">
+                          Pink
+                        </span>
+                      </div>
+                    </div>
+                    <div className="w-1/6 text-zinc-600 text-xl text-right">
+                      50
+                    </div>
+                    <div className="w-1/6 text-zinc-500 text-right">25</div>
                   </div>
-                  <div className="flex w-full justify-between flex-wrap items-center my-4">
-                    <button className="text-red-500 my-4 flex grow">
-                      ล้างรายการทั้งหมด
-                    </button>
-                    <input
-                      type="text"
-                      className="outline-none border-b-2 leading-4 h-4"
-                      placeholder="เบอร์โทรศัพท์ Promptpay"
-                    />
+                  <div className="flex py-3 items-center">
+                    <div className="w-4/6 text-zinc-600 font-bold break-words">
+                      aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                      <div className="flex flex-wrap justify-start gap-2">
+                        <span className="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+                          Default
+                        </span>
+                        <span className="bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">
+                          Dark
+                        </span>
+                        <span className="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">
+                          Red
+                        </span>
+                        <span className="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">
+                          Green
+                        </span>
+                        <span className="bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-yellow-900 dark:text-yellow-300">
+                          Yellow
+                        </span>
+                        <span className="bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-indigo-900 dark:text-indigo-300">
+                          Indigo
+                        </span>
+                        <span className="bg-purple-100 text-purple-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-purple-900 dark:text-purple-300">
+                          Purple
+                        </span>
+                        <span className="bg-pink-100 text-pink-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-pink-900 dark:text-pink-300">
+                          Pink
+                        </span>
+                      </div>
+                    </div>
+                    <div className="w-1/6 text-zinc-600 text-xl text-right">
+                      50
+                    </div>
+                    <div className="w-1/6 text-zinc-500 text-right">25</div>
                   </div>
+                </div>
+
+                <div className="flex gap-2 py-4 px-2">
+                  <input
+                    className="outline-none border-b-2 w-5/6 text-zinc-500"
+                    placeholder="ระบุรายการ"
+                  />
+                  <button
+                    type="button"
+                    className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 grow"
+                  >
+                    เพิ่ม
+                  </button>
+                </div>
+                <div className="flex w-full justify-between flex-wrap items-center py-4 px-2">
+                  <button className="text-red-500 my-4 flex grow">
+                    ล้างรายการทั้งหมด
+                  </button>
+                  <input
+                    type="text"
+                    className="outline-none border-b-2 leading-4 h-4"
+                    placeholder="เบอร์โทรศัพท์ Promptpay"
+                  />
                 </div>
               </Tab.Panel>
               <Tab.Panel>
-                <div className="grid grid-cols-1 divide-y pt-2 px-2">
-                  <div className="flex my-4 items-center">
-                    <div className="w-4/6 text-zinc-500">ชื่อคน</div>
-                    <div className="w-1/6 text-zinc-500 text-right">จ่าย</div>
-                    <div className="w-1/6 text-zinc-500 text-right">&nbsp;</div>
-                  </div>
+                <div className="flex pt-4 px-2 items-center">
+                  <div className="w-4/6 text-zinc-500">ชื่อคน</div>
+                  <div className="w-1/6 text-zinc-500 text-right">จ่าย</div>
+                  <div className="w-1/6 text-zinc-500 text-right">&nbsp;</div>
+                </div>
+                <div className="grid grid-cols-1 divide-y px-2">
                   <div className="flex py-3 items-center">
                     <div className="w-4/6 text-zinc-600 font-bold break-words">
                       aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -165,20 +236,20 @@ const ShareBillApp = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 py-4">
+                <div className="flex gap-2 py-4 px-2">
                   <input
                     className="outline-none border-b-2 w-5/6 text-zinc-500"
                     placeholder="ระบุชื่อ"
                   />
                   <button
                     type="button"
-                    className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 grow"
+                    className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 grow"
                   >
                     เพิ่ม
                   </button>
                 </div>
 
-                <div className="flex w-full justify-between flex-wrap items-center py-4">
+                <div className="flex w-full justify-between flex-wrap items-center py-4 px-2">
                   <button className="text-red-500 my-4 flex grow">
                     ล้างรายชื่อทั้งหมด
                   </button>
