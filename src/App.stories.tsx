@@ -43,14 +43,22 @@ interface CalculatorAction {
 }
 
 const calculate = (result: string) => {
-  let checkResult = "";
+  let checkResult = result;
   if (result.includes("--")) {
     checkResult = result.replace("--", "+");
-  } else {
-    checkResult = result;
+  }
+  if (result.includes("÷")) {
+    checkResult = result.replace("÷", "/");
+  }
+  if (result.includes("x")) {
+    checkResult = result.replace("x", "*");
+  }
+  if (result.includes("=")) {
+    checkResult = result.replace("=", "");
   }
   try {
     checkResult = (eval(checkResult) || "") + "";
+    checkResult = Math.ceil(Number(checkResult)).toString();
   } catch (e) {
     checkResult = "error";
   }
@@ -298,7 +306,7 @@ const ShareBillApp = () => {
                       onClick={() => {
                         if (menu.indexOf(newMenu) > -1) {
                           alert("เมนูนี้มีอยู่แล้ว");
-                        } else {
+                        } else if (newMenu.trim().length > 0) {
                           setOpenCalculator(() => true);
                           setOpenFoodDialog(() => true);
                         }
@@ -430,14 +438,14 @@ const AddFoodDialog = ({
     setShowCalculator(() => openCalculator);
   }, [openCalculator]);
   return (
-    <Dialog
-      open={openFoodDialog}
-      onClose={() => setOpenFoodDialog(false)}
-      className="relative z-50"
-    >
-      {/* The backdrop, rendered as a fixed sibling to the panel container */}
-      <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-      <CalculatorProvider>
+    <CalculatorProvider>
+      <Dialog
+        open={openFoodDialog}
+        onClose={() => setOpenFoodDialog(false)}
+        className="relative z-50"
+      >
+        {/* The backdrop, rendered as a fixed sibling to the panel container */}
+        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
         <Dialog.Panel>
           <div
             className={`fixed inset-0 flex flex-col ${showCalculator ? "justify-between" : "justify-center"} w-[424px] h-screen mx-auto`}
@@ -462,8 +470,8 @@ const AddFoodDialog = ({
             </div>
           </div>
         </Dialog.Panel>
-      </>
-    CalculatorProvider</Dialog>
+      </Dialog>
+    </CalculatorProvider>
   );
 };
 
@@ -580,7 +588,7 @@ const Calculator = ({
           className="bg-zinc-100 w-[88px]"
           onClick={() => {
             dispatch &&
-              dispatch({ type: CalculatorActionType.DIVIDE, payload: "/" });
+              dispatch({ type: CalculatorActionType.DIVIDE, payload: "÷" });
           }}
         >
           <FaDivide />
@@ -618,7 +626,7 @@ const Calculator = ({
           className="bg-zinc-100 w-[88px]"
           onClick={() => {
             dispatch &&
-              dispatch({ type: CalculatorActionType.MULTIPLY, payload: "*" });
+              dispatch({ type: CalculatorActionType.MULTIPLY, payload: "x" });
           }}
         >
           <FaX />
@@ -709,11 +717,13 @@ const Calculator = ({
         >
           <div className="font-semibold uppercase">ok</div>
         </CalculatorButton>
-        <CalculatorButton className="bg-zinc-200 w-[88px]" onClick={() => {
-
+        <CalculatorButton
+          className="bg-zinc-200 w-[88px]"
+          onClick={() => {
             dispatch &&
-              dispatch({ type: CalculatorActionType.EQUAL, payload: "" });
-        }}>
+              dispatch({ type: CalculatorActionType.EQUAL, payload: "=" });
+          }}
+        >
           <FaEquals />
         </CalculatorButton>
       </div>
