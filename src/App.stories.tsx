@@ -307,26 +307,28 @@ const AddFoodDialog = () => {
       {/* The backdrop, rendered as a fixed sibling to the panel container */}
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
 
-      <div
-        className={`fixed inset-0 flex flex-col ${showCalculator ? "justify-between" : "justify-center"} w-[424px] h-screen mx-auto`}
-      >
-        {/* Full-screen container to center the panel */}
-        <div className={showCalculator ? "items-start pt-32" : ""}>
-          {/* Add Food */}
-          <Dialog.Panel className="mx-auto rounded bg-white">
-            <FoodPanel
-              setIsOpen={setIsOpen}
-              setShowCalculator={setShowCalculator}
-            />
-          </Dialog.Panel>
+      <Dialog.Panel>
+        <div
+          className={`fixed inset-0 flex flex-col ${showCalculator ? "justify-between" : "justify-center"} w-[424px] h-screen mx-auto`}
+        >
+          {/* Full-screen container to center the panel */}
+          <div className={showCalculator ? "items-start pt-32" : ""}>
+            {/* Add Food */}
+            <div className="mx-auto rounded bg-white">
+              <FoodPanel
+                setIsOpen={setIsOpen}
+                setShowCalculator={setShowCalculator}
+              />
+            </div>
+          </div>
+          <div className={`items-end ${showCalculator ? "visible" : "hidden"}`}>
+            {/* Calculator */}
+            <div className="mx-auto rounded bg-white">
+              <Calculator setShowCalculator={setShowCalculator} />
+            </div>
+          </div>
         </div>
-        <div className={`items-end ${showCalculator ? "visible" : "hidden"}`}>
-          {/* Calculator */}
-          <Dialog.Panel className="mx-auto rounded bg-white">
-            <Calculator setShowCalculator={setShowCalculator} />
-          </Dialog.Panel>
-        </div>
-      </div>
+      </Dialog.Panel>
     </Dialog>
   );
 };
