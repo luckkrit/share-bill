@@ -11,6 +11,7 @@ import {
   FaX,
   FaEquals,
   FaCheck,
+  FaTrash,
 } from "react-icons/fa6";
 import { FaBackspace } from "react-icons/fa";
 import React, {
@@ -26,6 +27,249 @@ import React, {
 import { cn } from "./lib/utils";
 import uniq from "lodash/uniq";
 
+enum ShareBillDialogType {
+  ADD_FOOD = "ADD_FOOD",
+  UPDATE_FOOD = "UPDATE_FOOD",
+  CLOSE = "CLOSE",
+  SHOW_CALCULATOR = "SHOW_CALCULATOR",
+  HIDE_CALCULATOR = "HIDE_CALCULATOR",
+}
+
+interface ShareBillDialogAction {
+  type: ShareBillDialogType;
+  payload: ShareBillDialogState;
+}
+
+interface ShareBillDialogState {
+  openFoodDialog: boolean;
+  openCalculatorDialog: boolean;
+}
+
+const ShareBillDialogReducer = (
+  state: ShareBillDialogState,
+  action: ShareBillDialogAction
+) => {
+  switch (action.type) {
+    case ShareBillDialogType.ADD_FOOD:
+      console.log("add food");
+      return { ...state, ...action.payload };
+    case ShareBillDialogType.UPDATE_FOOD:
+      return { ...state, ...action.payload };
+    case ShareBillDialogType.CLOSE:
+      return { ...state, ...action.payload };
+    case ShareBillDialogType.SHOW_CALCULATOR:
+      return { ...state, ...action.payload };
+    case ShareBillDialogType.HIDE_CALCULATOR:
+      return { ...state, ...action.payload };
+    default:
+      throw Error("Unknown action: " + action.type);
+  }
+};
+
+const ShareBillDialogContext = createContext({
+  openFoodDialog: true,
+  openCalculatorDialog: true,
+});
+
+const ShareBillDialogDispatchContext =
+  createContext<React.Dispatch<ShareBillDialogAction> | null>(null);
+
+const ShareBillDialogProvider = ({ children }: PropsWithChildren) => {
+  const [state, dispatch] = useReducer(ShareBillDialogReducer, {
+    openFoodDialog: false,
+    openCalculatorDialog: false,
+  });
+  return (
+    <ShareBillDialogContext.Provider value={state}>
+      <ShareBillDialogDispatchContext.Provider value={dispatch}>
+        {children}
+      </ShareBillDialogDispatchContext.Provider>
+    </ShareBillDialogContext.Provider>
+  );
+};
+
+const useShareBillDialogContext = () => useContext(ShareBillDialogContext);
+const useShareBillDialogDispatchContext = () =>
+  useContext(ShareBillDialogDispatchContext);
+
+enum BillActionType {
+  ADD_FOOD = "ADD_FOOD",
+  DELETE_FOOD = "DELETE_FOOD",
+  ADD_PEOPLE = "ADD_PEOPLE",
+  DELETE_PEOPLE = "DELETE_PEOPLE",
+  UPDATE_FOOD_PRICE = "ADD_FOOD_PRICE",
+  ADD_ALL_PEOPLE = "ADD_ALL_PEOPLE",
+  CLEAR_FOOD = "CLEAR_FOOD",
+  CLEAR_ALL_PEOPLE = "CLEAR_ALL_PEOPLE",
+}
+
+interface BillAction {
+  type: BillActionType;
+}
+
+interface AddFoodAction extends BillAction {
+  foodName: string;
+  price: number;
+}
+
+interface DeleteFoodAction extends BillAction {
+  foodName: string;
+}
+
+interface AddPeopleAction extends BillAction {
+  foodName: string;
+  peopleName: string;
+}
+
+interface UpdateFoodPriceAction extends BillAction {
+  foodName: string;
+  price: number;
+}
+
+interface DeletePeopleAction extends BillAction {
+  foodName: string;
+  peopleName: string;
+}
+interface AddAllPeopleAction extends BillAction {
+  peopleName: string;
+  badgeColor: string;
+}
+interface ClearFoodAction extends BillAction {}
+interface ClearAllPeople extends BillAction {}
+
+const billReducer = (billModel: BillModel, action: BillAction) => {
+  switch (action.type) {
+    case BillActionType.ADD_FOOD:
+      const addFoodAction: AddFoodAction = action as AddFoodAction;
+      const bill: Record<string, Order> = {};
+      bill[addFoodAction.foodName] = {
+        price: addFoodAction.price,
+        people: [],
+        amount: 0,
+      };
+      return { ...billModel, data: [...billModel.data, bill] };
+    case BillActionType.DELETE_FOOD:
+      const deleteFoodAction: DeleteFoodAction = action as DeleteFoodAction;
+      const updateBills = billModel.data.filter((b) => {
+        const keys = Object.keys(b);
+        if (keys[0] !== deleteFoodAction.foodName) {
+          return b;
+        }
+      });
+      return { ...billModel, data: [...updateBills] };
+    case BillActionType.ADD_PEOPLE:
+      const addPeopleAction: AddPeopleAction = action as AddPeopleAction;
+      billModel.data.forEach((o) => {
+        const keys = Object.keys(o);
+        if (keys[0] === addPeopleAction.foodName) {
+          if (o[keys[0]].people.indexOf(addPeopleAction.peopleName) === -1) {
+            o[keys[0]].people.push(addPeopleAction.peopleName);
+            if (o[keys[0]].people.length > 0) {
+              o[keys[0]].amount = Math.ceil(
+                o[keys[0]].price / o[keys[0]].people.length
+              );
+            } else {
+              o[keys[0]].amount = 0;
+            }
+            console.log(o[keys[0]].amount);
+          }
+        }
+      });
+      return {
+        ...billModel,
+        data: [...billModel.data],
+      };
+    case BillActionType.UPDATE_FOOD_PRICE:
+      const updateFoodPriceAction: UpdateFoodPriceAction =
+        action as UpdateFoodPriceAction;
+      billModel.data.forEach((o) => {
+        const keys = Object.keys(o);
+        if (keys[0] === updateFoodPriceAction.foodName) {
+          o[keys[0]].price = updateFoodPriceAction.price;
+
+          if (o[keys[0]].people.length > 0) {
+            o[keys[0]].amount = Math.ceil(
+              o[keys[0]].price / o[keys[0]].people.length
+            );
+          } else {
+            o[keys[0]].amount = 0;
+          }
+          console.log(o[keys[0]].amount);
+        }
+      });
+      return { ...billModel, data: [...billModel.data] };
+    case BillActionType.DELETE_PEOPLE:
+      const deletePeopleAction: DeletePeopleAction =
+        action as DeletePeopleAction;
+      billModel.data.forEach((o) => {
+        const keys = Object.keys(o);
+        if (keys[0] === deletePeopleAction.foodName) {
+          o[keys[0]].people = o[keys[0]].people.filter((p) => {
+            if (p !== deletePeopleAction.peopleName) {
+              return p;
+            }
+          });
+          if (o[keys[0]].people.length > 0) {
+            o[keys[0]].amount = Math.ceil(
+              o[keys[0]].price / o[keys[0]].people.length
+            );
+          } else {
+            o[keys[0]].amount = 0;
+          }
+          console.log(o[keys[0]].amount);
+        }
+      });
+      return { ...billModel, data: [...billModel.data] };
+    case BillActionType.ADD_ALL_PEOPLE:
+      const addAllPeopleAction: AddAllPeopleAction =
+        action as AddAllPeopleAction;
+      return {
+        ...billModel,
+        allPeople: uniq([
+          ...billModel.allPeople,
+          {
+            peopleName: addAllPeopleAction.peopleName,
+            badgeColor: addAllPeopleAction.badgeColor,
+          },
+        ]),
+      };
+    case BillActionType.CLEAR_FOOD:
+      return { ...billModel, data: [] };
+    case BillActionType.CLEAR_ALL_PEOPLE:
+      return { ...billModel, allPeople: [] };
+    default:
+      throw Error("Unknown action: " + action.type);
+  }
+};
+
+const BillContext = createContext<BillModel>({
+  data: [],
+  promptpay: "",
+  amount: 0,
+  allPeople: [],
+});
+const BillDispatchContext = createContext<React.Dispatch<BillAction> | null>(
+  null
+);
+
+const BillProvider = ({ children }: PropsWithChildren) => {
+  const [billModel, dispatch] = useReducer(billReducer, {
+    data: [],
+    promptpay: "",
+    amount: 0,
+    allPeople: [],
+  });
+  return (
+    <BillContext.Provider value={billModel}>
+      <BillDispatchContext.Provider value={dispatch}>
+        {children}
+      </BillDispatchContext.Provider>
+    </BillContext.Provider>
+  );
+};
+const useBillContext = () => useContext(BillContext);
+const useBillDispatchContext = () => useContext(BillDispatchContext);
+
 enum CalculatorActionType {
   ADD = "ADD",
   MINUS = "MINUS",
@@ -35,6 +279,7 @@ enum CalculatorActionType {
   CLEAR = "CLEAR",
   BACKSPACE = "BACKSPACE",
   DIGIT = "DIGIT",
+  SET_RESULT = "SET_RESULT",
 }
 
 interface CalculatorAction {
@@ -82,6 +327,8 @@ const calculatorReducer = (result: string, action: CalculatorAction) => {
       return result.slice(0, -1);
     case CalculatorActionType.DIGIT:
       return result + action.payload;
+    case CalculatorActionType.SET_RESULT:
+      return action.payload;
     default:
       throw Error("Unknown action: " + action.type);
   }
@@ -111,28 +358,20 @@ interface Order {
   people: string[];
   amount: number;
 }
+interface People {
+  peopleName: string;
+  badgeColor: string;
+}
 interface BillModel {
   data: Record<string, Order>[];
   promptpay?: string;
   amount?: number;
+  allPeople: People[];
 }
 
-const bill: BillModel = {
-  data: [
-    { ข้าวไข่เจียวหมูสับ: { price: 100, people: ["Krit", "Auu"], amount: 50 } },
-    {
-      ข้าวกะเพราะหมูสับไข่เจียว: {
-        price: 120,
-        people: ["Krit", "Auu"],
-        amount: 60,
-      },
-    },
-  ],
-};
-
-const getPeople = () => {
+const getPeople = (bills: Record<string, Order>[]) => {
   let people: string[] = [];
-  bill.data.forEach((o) => {
+  bills.forEach((o) => {
     const keys = Object.keys(o);
     if (keys.length > 0) {
       people = people.concat(o[keys[0]].people);
@@ -141,9 +380,51 @@ const getPeople = () => {
   return uniq(people);
 };
 
-const getTotalPrice = () => {
+const getPeopleFromFood = (
+  bills: Record<string, Order>[],
+  foodName: string
+) => {
+  let people: string[] = [];
+  bills.forEach((o) => {
+    const keys = Object.keys(o);
+    if (keys[0] === foodName) {
+      people = people.concat(o[keys[0]].people);
+    }
+  });
+  return uniq(people);
+};
+
+const getAmountFromFood = (
+  bills: Record<string, Order>[],
+  foodName: string
+) => {
+  let amount = 0;
+  bills.forEach((o) => {
+    const keys = Object.keys(o);
+    if (keys[0] === foodName) {
+      amount = o[keys[0]].amount;
+    }
+  });
+  return amount;
+};
+
+const getAmountFromPeople = (
+  bills: Record<string, Order>[],
+  peopleName: string
+) => {
+  let amount = 0;
+  bills.forEach((o) => {
+    const keys = Object.keys(o);
+    if (o[keys[0]].people.indexOf(peopleName) > -1) {
+      amount += o[keys[0]].amount;
+    }
+  });
+  return amount;
+};
+
+const getTotalPrice = (bills: Record<string, Order>[]) => {
   let total = 0;
-  bill.data.forEach((o) => {
+  bills.forEach((o) => {
     const keys = Object.keys(o);
     if (keys.length > 0) {
       total = total + o[keys[0]].price;
@@ -152,9 +433,9 @@ const getTotalPrice = () => {
   return total;
 };
 
-const getMenu = () => {
+const getMenu = (bills: Record<string, Order>[]) => {
   let menu: string[] = [];
-  bill.data.forEach((o) => {
+  bills.forEach((o) => {
     const keys = Object.keys(o);
     if (keys.length > 0) {
       menu = menu.concat(keys[0]);
@@ -162,32 +443,159 @@ const getMenu = () => {
   });
   return menu;
 };
+const getMenuPrice = (bills: Record<string, Order>[], foodName: string) => {
+  let price = 0;
+  bills.forEach((o) => {
+    const keys = Object.keys(o);
+    if (keys[0] === foodName) {
+      price = o[keys[0]].price;
+    }
+  });
+  return price;
+};
+const getColor = (i: number) => {
+  const colors: string[] = [
+    "blue",
+    "dark",
+    "red",
+    "green",
+    "yellow",
+    "indigo",
+    "purple",
+    "pink",
+  ];
+  const color = colors[i % colors.length];
+  if (color === "blue") return "blue";
+  else if (color === "dark") return "dark";
+  else if (color === "red") return "red";
+  else if (color === "green") return "green";
+  else if (color === "yellow") return "yellow";
+  else if (color === "indigo") return "indigo";
+  else if (color === "purple") return "purple";
+  else return "pink";
+};
+
+const getColorName = (
+  color: string
+):
+  | "blue"
+  | "dark"
+  | "red"
+  | "green"
+  | "yellow"
+  | "indigo"
+  | "purple"
+  | "pink"
+  | null
+  | undefined => {
+  if (color === "blue") return "blue";
+  else if (color === "dark") return "dark";
+  else if (color === "red") return "red";
+  else if (color === "green") return "green";
+  else if (color === "yellow") return "yellow";
+  else if (color === "indigo") return "indigo";
+  else if (color === "purple") return "purple";
+  else return "pink";
+};
+
+const peopleDetailItemVariants = cva(
+  `w-4/6 font-semibold break-words text-left`,
+  {
+    variants: {
+      variant: {
+        blue: "text-blue-400",
+        dark: "text-gray-400",
+        red: "text-red-400",
+        green: "text-green-400",
+        yellow: "text-yellow-400",
+        indigo: "text-indigo-400",
+        pink: "text-pink-400",
+        purple: "text-purple-400",
+      },
+    },
+  }
+);
+interface PeopleDetailItemProps
+  extends VariantProps<typeof peopleDetailItemVariants> {
+  people: People;
+  bills: Record<string, Order>[];
+}
+const PeopleDetailItem = ({
+  bills,
+  people,
+  variant,
+}: PeopleDetailItemProps) => {
+  const [paid, setPaid] = useState(false);
+  return (
+    <div className="flex py-3 items-center">
+      <button
+        className={cn(peopleDetailItemVariants({ variant }))}
+        onClick={() => {
+          setPaid((o) => !o);
+        }}
+      >
+        {people.peopleName}{" "}
+        {paid ? (
+          <span className="text-xs bg-green-100 text-green-800 font-medium me-2 px-2.5 py-0.5 rounded">
+            จ่ายแล้ว
+          </span>
+        ) : null}
+      </button>
+      <div className="w-1/6 text-zinc-600 text-xl text-right">
+        {getAmountFromPeople(bills, people.peopleName)}
+      </div>
+      <div className="w-1/6 text-zinc-500 flex justify-end">
+        <button onClick={() => {}}>
+          <VscListSelection />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 interface MenuDetailItemProps {
   menu: string;
   order: Order;
-  setOpenCalculator: React.Dispatch<React.SetStateAction<boolean>>;
-  setOpenFoodDialog: React.Dispatch<React.SetStateAction<boolean>>;
+  setNewMenu: React.Dispatch<React.SetStateAction<string>>;
+  allPeople: People[];
 }
 const MenuDetailItem = ({
-  setOpenCalculator,
-  setOpenFoodDialog,
   menu,
   order,
+  setNewMenu,
+  allPeople,
 }: MenuDetailItemProps) => {
+  console.log(order);
+  const dispatch = useBillDispatchContext();
+  const dialogDispatch = useShareBillDialogDispatchContext();
   return (
-    <div
-      className="flex py-3 items-center"
-      onClick={() => {
-        setOpenCalculator(() => false);
-        setOpenFoodDialog(() => true);
-      }}
-    >
-      <div className="w-4/6 text-zinc-600 font-semibold break-words">
+    <div className="flex py-3 items-center">
+      <div
+        className="w-3/6 text-zinc-600 font-semibold break-words cursor-pointer"
+        onClick={() => {
+          dialogDispatch &&
+            dialogDispatch({
+              type: ShareBillDialogType.UPDATE_FOOD,
+              payload: {
+                openCalculatorDialog: false,
+                openFoodDialog: true,
+              },
+            });
+          setNewMenu(() => menu);
+        }}
+      >
         {menu}
         <div className="flex flex-wrap justify-start gap-2">
           {order.people.map((people: string) => {
-            return <PeopleBadge key={people}>{people}</PeopleBadge>;
+            const p = allPeople.find((o) => o.peopleName === people);
+            if (p !== undefined) {
+              return (
+                <PeopleBadge key={people} variant={getColorName(p.badgeColor)}>
+                  {people}
+                </PeopleBadge>
+              );
+            }
+            return null;
           })}
         </div>
       </div>
@@ -195,23 +603,30 @@ const MenuDetailItem = ({
         {order.price}
       </div>
       <div className="w-1/6 text-zinc-500 text-right">{order.amount}</div>
+      <div className="w-1/6 text-red-500 flex justify-center">
+        <button
+          onClick={() => {
+            const deleteFoodAction: DeleteFoodAction = {
+              type: BillActionType.DELETE_FOOD,
+              foodName: menu,
+            };
+            dispatch && dispatch(deleteFoodAction);
+          }}
+        >
+          <FaTrash />
+        </button>
+      </div>
     </div>
   );
 };
 
 const ShareBillApp = () => {
-  const [openFoodDialog, setOpenFoodDialog] = useState(false);
   const [openPeoplePaymentDialog, setOpenPeoplePaymentDialog] = useState(false);
-  const [openCalculator, setOpenCalculator] = useState(false);
-  const [people, setPeople] = useState<string[]>([]);
-  const [totalPrice, setTotalPrice] = useState(0);
-  const [menu, setMenu] = useState<string[]>([]);
+  const [peopleName, setPeopleName] = useState("");
   const [newMenu, setNewMenu] = useState("");
-  useEffect(() => {
-    setPeople(() => getPeople());
-    setTotalPrice(() => getTotalPrice());
-    setMenu(() => getMenu());
-  }, []);
+  const billModel = useBillContext();
+  const dispatch = useBillDispatchContext();
+  const dialogDispatch = useShareBillDialogDispatchContext();
   return (
     <>
       <div className="max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto ibm-plex-sans-thai-regular overflow-hidden">
@@ -221,13 +636,17 @@ const ShareBillApp = () => {
               <div className="text-xl font-semibold text-zinc-500 ibm-plex-sans-thai-medium">
                 จำนวนคน
               </div>
-              <div className="text-5xl text-zinc-600 mt-2">{people.length}</div>
+              <div className="text-5xl text-zinc-600 mt-2">
+                {getPeople(billModel.data).length}
+              </div>
             </div>
             <div className="flex flex-col">
               <div className="text-xl font-semibold text-zinc-500 ibm-plex-sans-thai-medium">
                 ราคารวม
               </div>
-              <div className="text-5xl text-zinc-600 mt-2">{totalPrice}</div>
+              <div className="text-5xl text-zinc-600 mt-2">
+                {getTotalPrice(billModel.data)}
+              </div>
             </div>
             <div>
               <div className="text-xl font-semibold text-zinc-500 ibm-plex-sans-thai-medium">
@@ -274,12 +693,13 @@ const ShareBillApp = () => {
               <Tab.Panels>
                 <Tab.Panel>
                   <div className="flex pt-4 px-2">
-                    <div className="w-4/6 text-zinc-500">ชื่อรายการ</div>
+                    <div className="w-3/6 text-zinc-500">ชื่อรายการ</div>
                     <div className="w-1/6 text-zinc-500 text-right">ราคา</div>
                     <div className="w-1/6 text-zinc-500 text-right">คนละ</div>
+                    <div className="w-1/6 text-zinc-500 text-right"></div>
                   </div>
                   <div className="grid grid-cols-1 divide-y px-2">
-                    {bill.data.map((o) => {
+                    {billModel.data.map((o) => {
                       const keys = Object.keys(o);
                       if (keys.length > 0) {
                         return (
@@ -287,8 +707,8 @@ const ShareBillApp = () => {
                             key={keys[0]}
                             menu={keys[0]}
                             order={o[keys[0]]}
-                            setOpenCalculator={setOpenCalculator}
-                            setOpenFoodDialog={setOpenFoodDialog}
+                            allPeople={billModel.allPeople}
+                            setNewMenu={setNewMenu}
                           />
                         );
                       }
@@ -301,24 +721,43 @@ const ShareBillApp = () => {
                       className="outline-none border-b-2 w-5/6 text-zinc-500"
                       placeholder="ระบุรายการ"
                       onChange={(e) => setNewMenu(() => e.target.value)}
+                      value={newMenu}
                     />
                     <button
                       onClick={() => {
-                        if (menu.indexOf(newMenu) > -1) {
+                        if (getMenu(billModel.data).indexOf(newMenu) > -1) {
                           alert("เมนูนี้มีอยู่แล้ว");
                         } else if (newMenu.trim().length > 0) {
-                          setOpenCalculator(() => true);
-                          setOpenFoodDialog(() => true);
+                          const billAction: AddFoodAction = {
+                            type: BillActionType.ADD_FOOD,
+                            foodName: newMenu,
+                            price: 0,
+                          };
+                          dispatch && dispatch(billAction);
+                          dialogDispatch &&
+                            dialogDispatch({
+                              type: ShareBillDialogType.ADD_FOOD,
+                              payload: {
+                                openFoodDialog: true,
+                                openCalculatorDialog: true,
+                              },
+                            });
                         }
                       }}
                       type="button"
-                      className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 grow"
+                      className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none  grow"
                     >
                       เพิ่ม
                     </button>
                   </div>
                   <div className="flex w-full justify-between flex-wrap items-center py-4 px-2">
-                    <button className="text-red-500 my-4 flex grow">
+                    <button
+                      className="text-red-500 my-4 flex grow"
+                      onClick={() => {
+                        dispatch &&
+                          dispatch({ type: BillActionType.CLEAR_FOOD });
+                      }}
+                    >
                       ล้างรายการทั้งหมด
                     </button>
                     <input
@@ -335,57 +774,55 @@ const ShareBillApp = () => {
                     <div className="w-1/6 text-zinc-500 text-right">&nbsp;</div>
                   </div>
                   <div className="grid grid-cols-1 divide-y px-2">
-                    <div className="flex py-3 items-center">
-                      <div className="w-4/6 text-lime-600 font-semibold break-words">
-                        aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-                      </div>
-                      <div className="w-1/6 text-zinc-600 text-xl text-right">
-                        50
-                      </div>
-                      <div className="w-1/6 text-zinc-500 flex justify-end">
-                        <button
-                          onClick={() => {
-                            setOpenPeoplePaymentDialog(() => true);
-                          }}
-                        >
-                          <VscListSelection />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="flex py-3 items-center">
-                      <div className="w-4/6 text-green-600 font-semibold break-words">
-                        aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-                      </div>
-                      <div className="w-1/6 text-zinc-600 text-xl text-right">
-                        50
-                      </div>
-                      <div className="w-1/6 text-zinc-500 flex justify-end">
-                        <button
-                          onClick={() => {
-                            setOpenPeoplePaymentDialog(() => true);
-                          }}
-                        >
-                          <VscListSelection />
-                        </button>
-                      </div>
-                    </div>
+                    {billModel.allPeople.map((people) => (
+                      <PeopleDetailItem
+                        people={people}
+                        bills={billModel.data}
+                        variant={getColorName(people.badgeColor)}
+                      />
+                    ))}
                   </div>
 
                   <div className="flex gap-2 py-4 px-2">
                     <input
                       className="outline-none border-b-2 w-5/6 text-zinc-500"
                       placeholder="ระบุชื่อ"
+                      onChange={(e) => setPeopleName(e.target.value)}
+                      value={peopleName}
                     />
                     <button
                       type="button"
-                      className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 grow"
+                      className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none grow"
+                      onClick={() => {
+                        if (
+                          billModel.allPeople.find(
+                            (p) => p.peopleName === peopleName
+                          ) !== undefined
+                        ) {
+                          alert("ชื่อคนซ้ำกัน");
+                        } else {
+                          const addAllPeopleAction: AddAllPeopleAction = {
+                            type: BillActionType.ADD_ALL_PEOPLE,
+                            peopleName,
+                            badgeColor: getColor(billModel.allPeople.length),
+                          };
+                          dispatch && dispatch(addAllPeopleAction);
+                          setPeopleName(() => "");
+                        }
+                      }}
                     >
                       เพิ่ม
                     </button>
                   </div>
 
                   <div className="flex w-full justify-between flex-wrap items-center py-4 px-2">
-                    <button className="text-red-500 my-4 flex grow">
+                    <button
+                      className="text-red-500 my-4 flex grow"
+                      onClick={() => {
+                        dispatch &&
+                          dispatch({ type: BillActionType.CLEAR_ALL_PEOPLE });
+                      }}
+                    >
                       ล้างรายชื่อทั้งหมด
                     </button>
                     <input
@@ -410,11 +847,7 @@ const ShareBillApp = () => {
           </button>
         </div>
       </div>
-      <AddFoodDialog
-        openCalculator={openCalculator}
-        setOpenFoodDialog={setOpenFoodDialog}
-        openFoodDialog={openFoodDialog}
-      />
+      <AddFoodDialog newMenu={newMenu} setNewMenu={setNewMenu} />
       <AddPeoplePaymentDialog
         openPeoplePaymentDialog={openPeoplePaymentDialog}
         setOpenPeoplePaymentDialog={setOpenPeoplePaymentDialog}
@@ -424,48 +857,49 @@ const ShareBillApp = () => {
 };
 
 interface AddFoodDialogProps {
-  openCalculator: boolean;
-  openFoodDialog: boolean;
-  setOpenFoodDialog: React.Dispatch<React.SetStateAction<boolean>>;
+  newMenu: string;
+  setNewMenu: React.Dispatch<React.SetStateAction<string>>;
 }
-const AddFoodDialog = ({
-  openCalculator,
-  openFoodDialog,
-  setOpenFoodDialog,
-}: AddFoodDialogProps) => {
-  const [showCalculator, setShowCalculator] = useState(openFoodDialog);
+const AddFoodDialog = ({ newMenu, setNewMenu }: AddFoodDialogProps) => {
+  const dialogDispatch = useShareBillDialogDispatchContext();
+  const { openFoodDialog, openCalculatorDialog } = useShareBillDialogContext();
   useEffect(() => {
-    setShowCalculator(() => openCalculator);
-  }, [openCalculator]);
+    if (!openFoodDialog) {
+      setNewMenu(() => "");
+    }
+  }, [openFoodDialog]);
   return (
     <CalculatorProvider>
       <Dialog
         open={openFoodDialog}
-        onClose={() => setOpenFoodDialog(false)}
+        onClose={() => {
+          dialogDispatch &&
+            dialogDispatch({
+              type: ShareBillDialogType.CLOSE,
+              payload: { openCalculatorDialog: false, openFoodDialog: false },
+            });
+        }}
         className="relative z-50"
       >
         {/* The backdrop, rendered as a fixed sibling to the panel container */}
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
         <Dialog.Panel>
           <div
-            className={`fixed inset-0 flex flex-col ${showCalculator ? "justify-between" : "justify-center"} w-[424px] h-screen mx-auto`}
+            className={`fixed inset-0 flex flex-col ${openCalculatorDialog ? "justify-between" : "justify-center"} w-[424px] h-screen mx-auto`}
           >
             {/* Full-screen container to center the panel */}
-            <div className={showCalculator ? "items-start pt-32" : ""}>
+            <div className={openCalculatorDialog ? "items-start pt-32" : ""}>
               {/* Add Food */}
               <div className="mx-auto rounded bg-white">
-                <FoodPanel
-                  setIsOpen={setOpenFoodDialog}
-                  setShowCalculator={setShowCalculator}
-                />
+                <FoodPanel newMenu={newMenu} />
               </div>
             </div>
             <div
-              className={`items-end ${showCalculator ? "visible" : "hidden"}`}
+              className={`items-end ${openCalculatorDialog ? "visible" : "hidden"}`}
             >
               {/* Calculator */}
               <div className="mx-auto rounded bg-white">
-                <Calculator setShowCalculator={setShowCalculator} />
+                <Calculator />
               </div>
             </div>
           </div>
@@ -476,45 +910,110 @@ const AddFoodDialog = ({
 };
 
 interface FoodPanelProps extends HTMLAttributes<HTMLDivElement> {
-  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setShowCalculator: React.Dispatch<React.SetStateAction<boolean>>;
+  newMenu: string;
 }
-const FoodPanel = ({
-  setIsOpen,
-  setShowCalculator,
-}: PropsWithChildren<FoodPanelProps>) => {
+const FoodPanel = ({ newMenu }: PropsWithChildren<FoodPanelProps>) => {
+  const [peopleName, setPeopleName] = useState("");
   const priceResult = useCalculatorContext();
+  const billModel = useBillContext();
+  const dispatch = useBillDispatchContext();
+  const calDispatch = useCalculatorDispatchContext();
+  const dialogDispatch = useShareBillDialogDispatchContext();
+  useEffect(() => {
+    const menuPrice = getMenuPrice(billModel.data, newMenu);
+    if (menuPrice !== 0) {
+      calDispatch &&
+        calDispatch({
+          type: CalculatorActionType.SET_RESULT,
+          payload: menuPrice.toString(),
+        });
+    }
+  }, []);
+  useEffect(() => {
+    const updateFoodPriceAction: UpdateFoodPriceAction = {
+      type: BillActionType.UPDATE_FOOD_PRICE,
+      foodName: newMenu,
+      price: Number(priceResult),
+    };
+    dispatch && dispatch(updateFoodPriceAction);
+  }, [priceResult]);
   return (
     <div className="w-[424px] p-4 ibm-plex-sans-thai-regular">
       <div className="flex flex-col items-center">
         <div className="text-zinc-500">รายการ</div>
-        <div className="text-blue-400 text-2xl font-semibold">jjj</div>
+        <div className="text-blue-400 text-2xl font-semibold">{newMenu}</div>
         <input
           className="py-4 w-full text-4xl border-b-2 text-center outline-none"
           readOnly
           value={priceResult}
           onClick={() => {
-            setShowCalculator(() => true);
+            dialogDispatch &&
+              dialogDispatch({
+                type: ShareBillDialogType.SHOW_CALCULATOR,
+                payload: { openCalculatorDialog: true, openFoodDialog: true },
+              });
           }}
         />
       </div>
       <div className="py-4 text-zinc-500 flex items-center">
         <MdPeopleAlt />
-        <div className="ps-2">คนจ่าย (0 คน คนละ 0 บาท)</div>
+        <div className="ps-2">
+          คนจ่าย ({getPeopleFromFood(billModel.data, newMenu).length} คน คนละ{" "}
+          {getAmountFromFood(billModel.data, newMenu)} บาท)
+        </div>
       </div>
       <div className="flex justify-start flex-wrap gap-2">
-        <TogglePeopleButton
-          variant={"blue"}
-          onToggle={(mark: boolean) => {
-            console.log("mark =", mark);
-          }}
-        >
-          jjj
-        </TogglePeopleButton>
+        {billModel.allPeople.map((p, i) => {
+          console.log(
+            "is mark ",
+            getPeopleFromFood(billModel.data, newMenu).indexOf(p.peopleName) >
+              -1
+          );
+          return (
+            <TogglePeopleButton
+              key={i}
+              isMark={
+                getPeopleFromFood(billModel.data, newMenu).indexOf(
+                  p.peopleName
+                ) > -1
+              }
+              variant={getColorName(p.badgeColor)}
+              onToggle={(mark: boolean) => {
+                if (mark) {
+                  const addPeopleAction: AddPeopleAction = {
+                    type: BillActionType.ADD_PEOPLE,
+                    foodName: newMenu,
+                    peopleName: p.peopleName,
+                  };
+                  dispatch && dispatch(addPeopleAction);
+                } else {
+                  const deletePeopleAction: DeletePeopleAction = {
+                    type: BillActionType.DELETE_PEOPLE,
+                    foodName: newMenu,
+                    peopleName: p.peopleName,
+                  };
+                  dispatch && dispatch(deletePeopleAction);
+                }
+              }}
+            >
+              {p.peopleName}
+            </TogglePeopleButton>
+          );
+        })}
       </div>
       <button
         type="button"
         className="my-4 py-2.5 px-5 text-sm font-medium text-blue-500 focus:outline-none bg-white rounded-lg border border-blue-500 hover:bg-blue-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 w-full"
+        onClick={() => {
+          billModel.allPeople.map((p) => {
+            const addPeopleAction: AddPeopleAction = {
+              type: BillActionType.ADD_PEOPLE,
+              foodName: newMenu,
+              peopleName: p.peopleName,
+            };
+            dispatch && dispatch(addPeopleAction);
+          });
+        }}
       >
         <div className="flex items-center justify-center">
           <FaPlus />
@@ -526,8 +1025,26 @@ const FoodPanel = ({
           type="text"
           className="outline-none border-b border-b-gray-300 w-full"
           placeholder="เพิ่มชื่อคนจ่าย"
+          onChange={(e) => setPeopleName(e.target.value)}
+          value={peopleName}
         />
         <button
+          onClick={() => {
+            if (
+              billModel.allPeople.find((p) => p.peopleName === peopleName) !==
+              undefined
+            ) {
+              alert("ชื่อคนซ้ำกัน");
+            } else {
+              const addAllPeopleAction: AddAllPeopleAction = {
+                type: BillActionType.ADD_ALL_PEOPLE,
+                peopleName,
+                badgeColor: getColor(billModel.allPeople.length),
+              };
+              dispatch && dispatch(addAllPeopleAction);
+              setPeopleName(() => "");
+            }
+          }}
           type="button"
           className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-8 py-2.5 ms-2 grow"
         >
@@ -536,7 +1053,13 @@ const FoodPanel = ({
       </div>
       <button
         onClick={() => {
-          setIsOpen(() => false);
+          dialogDispatch &&
+            dialogDispatch({
+              type: ShareBillDialogType.CLOSE,
+              payload: { openCalculatorDialog: false, openFoodDialog: false },
+            });
+          calDispatch &&
+            calDispatch({ type: CalculatorActionType.CLEAR, payload: "" });
         }}
         type="button"
         className="text-white bg-sky-500 hover:bg-sky-800 focus:ring-4 focus:ring-sky-300 font-medium rounded-lg text-sm px-8 py-2.5 my-4 grow w-full"
@@ -547,13 +1070,10 @@ const FoodPanel = ({
   );
 };
 
-interface CalculatorProps extends HTMLAttributes<HTMLDivElement> {
-  setShowCalculator: React.Dispatch<React.SetStateAction<boolean>>;
-}
-const Calculator = ({
-  setShowCalculator,
-}: PropsWithChildren<CalculatorProps>) => {
+interface CalculatorProps extends HTMLAttributes<HTMLDivElement> {}
+const Calculator = ({}: PropsWithChildren<CalculatorProps>) => {
   const dispatch = useCalculatorDispatchContext();
+  const dialogDispatch = useShareBillDialogDispatchContext();
   return (
     <div className="grid grid-rows-5">
       <div className="flex h-12">
@@ -712,7 +1232,11 @@ const Calculator = ({
         <CalculatorButton
           className="w-[336px] bg-lime-300"
           onClick={() => {
-            setShowCalculator(() => false);
+            dialogDispatch &&
+              dialogDispatch({
+                type: ShareBillDialogType.HIDE_CALCULATOR,
+                payload: { openCalculatorDialog: false, openFoodDialog: true },
+              });
           }}
         >
           <div className="font-semibold uppercase">ok</div>
@@ -840,7 +1364,7 @@ const toggleSpanVariants = cva(
     variants: {
       variant: {
         blue: "text-blue-800 bg-blue-100",
-        dark: "text-dark-800 bg-dark-100",
+        dark: "text-gray-800 bg-gray-100",
         red: "text-red-800 bg-red-100",
         green: "text-green-800 bg-green-100",
         yellow: "text-yellow-800 bg-yellow-100",
@@ -862,7 +1386,7 @@ const toggleButtonVariants = cva(
     variants: {
       variant: {
         blue: "text-blue-400 hover:bg-blue-200 hover:text-blue-900",
-        dark: "text-dark-400 hover:bg-dark-200 hover:text-dark-900",
+        dark: "text-gray-400 hover:bg-gray-200 hover:text-gray-900",
         red: "text-red-400 hover:bg-red-200 hover:text-red-900",
         green: "text-green-400 hover:bg-green-200 hover:text-green-900",
         yellow: "text-yellow-400 hover:bg-yellow-200 hover:text-yellow-900",
@@ -883,14 +1407,19 @@ interface TogglePeopleButtonProps
     VariantProps<typeof toggleSpanVariants>,
     VariantProps<typeof toggleButtonVariants> {
   onToggle: (mark: boolean) => void;
+  isMark: boolean;
 }
 
 const TogglePeopleButton = ({
+  isMark,
   children,
   variant,
   onToggle,
 }: TogglePeopleButtonProps) => {
-  const [mark, setMark] = useState(false);
+  const [mark, setMark] = useState(isMark);
+  useEffect(() => {
+    setMark(() => isMark);
+  }, [isMark]);
   return (
     <span
       className={cn(
@@ -903,8 +1432,8 @@ const TogglePeopleButton = ({
           toggleButtonVariants({ variant: mark ? variant : "disabled" })
         )}
         onClick={() => {
-          onToggle(mark);
           setMark((o) => !o);
+          onToggle(!mark);
         }}
       >
         {children}
@@ -919,7 +1448,7 @@ const peopleBadgeVariants = cva(
     variants: {
       variant: {
         blue: "bg-blue-100 text-blue-800",
-        dark: "bg-dark-100 text-dark-800",
+        dark: "bg-gray-100 text-gray-800",
         red: "bg-red-100 text-red-800",
         green: "bg-green-100 text-green-800",
         yellow: "bg-yellow-100 text-yellow-800",
@@ -958,9 +1487,11 @@ export const MainApp: Story = {
 export const AddFoodModal: Story = {
   render: () => {
     return (
-      <>
-        <ShareBillApp />
-      </>
+      <ShareBillDialogProvider>
+        <BillProvider>
+          <ShareBillApp />
+        </BillProvider>
+      </ShareBillDialogProvider>
     );
   },
 };
