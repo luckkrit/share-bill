@@ -283,12 +283,19 @@ const BillDispatchContext = createContext<React.Dispatch<BillAction> | null>(
 );
 
 const BillProvider = ({ children }: PropsWithChildren) => {
-  const [billModel, dispatch] = useReducer(billReducer, {
-    data: [],
-    promptpay: "",
-    amount: 0,
-    allPeople: [],
-  });
+  const query = new URLSearchParams(window.location.search);
+  const bill = query.get("bill");
+  let billObject =
+    bill !== null
+      ? JSON.parse(bill)
+      : {
+          data: [],
+          promptpay: "",
+          amount: 0,
+          allPeople: [],
+        };
+  billObject = { ...billObject, allPeople: [] };
+  const [billModel, dispatch] = useReducer(billReducer, billObject);
   return (
     <BillContext.Provider value={billModel}>
       <BillDispatchContext.Provider value={dispatch}>
@@ -819,7 +826,7 @@ const ShareBillApp = () => {
                             },
                           });
                       }}
-                      value={newMenu}
+                      defaultValue={newMenu}
                     />
                     <button
                       onClick={() => {
@@ -861,11 +868,11 @@ const ShareBillApp = () => {
                     >
                       ล้างรายการทั้งหมด
                     </button>
-                    <input
+                    {/* <input
                       type="text"
                       className="outline-none border-b-2 leading-4 h-4"
                       placeholder="เบอร์โทรศัพท์ Promptpay"
-                    />
+                    /> */}
                   </div>
                 </Tab.Panel>
                 <Tab.Panel>
@@ -900,7 +907,7 @@ const ShareBillApp = () => {
                             },
                           });
                       }}
-                      value={peopleName}
+                      defaultValue={peopleName}
                     />
                     <button
                       type="button"
@@ -945,11 +952,11 @@ const ShareBillApp = () => {
                     >
                       ล้างรายชื่อทั้งหมด
                     </button>
-                    <input
+                    {/* <input
                       type="text"
                       className="outline-none border-b-2 leading-4 h-4"
                       placeholder="เบอร์โทรศัพท์ Promptpay"
-                    />
+                    /> */}
                   </div>
                 </Tab.Panel>
               </Tab.Panels>
@@ -961,7 +968,7 @@ const ShareBillApp = () => {
           <input
             type="text"
             className="border border-gray-300 outline-none rounded bg-gray-50 pl-2 pr-10 h-8 w-full"
-            value={url}
+            defaultValue={url}
           />
           <CopyToClipboard
             text={url}
@@ -1548,7 +1555,13 @@ const AddPeoplePaymentDialog = ({}: AddPeoplePaymentDialogProps) => {
             <div className="grid grid-cols-1 divide-y">
               {billModel.data.map((o) => {
                 const keys = Object.keys(o);
-                return <MenuPaymentDetails menu={keys[0]} order={o[keys[0]]} />;
+                return (
+                  <MenuPaymentDetails
+                    key={keys[0]}
+                    menu={keys[0]}
+                    order={o[keys[0]]}
+                  />
+                );
               })}
             </div>
             <div className="flex px-2 pt-4">
