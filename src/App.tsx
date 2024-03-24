@@ -1040,7 +1040,7 @@ const AddFoodDialog = ({}: AddFoodDialogProps) => {
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
         <Dialog.Panel>
           <div
-            className={`fixed inset-0 flex flex-col ${openCalculatorDialog ? "justify-evenly" : "justify-center"} max-w-sm h-screen mx-auto`}
+            className={`fixed inset-0 flex flex-col ${openCalculatorDialog ? "justify-around" : "justify-center"} max-w-sm h-screen mx-auto`}
           >
             {/* Full-screen container to center the panel */}
             <div className={openCalculatorDialog ? "" : ""}>
@@ -1245,7 +1245,7 @@ const Calculator = ({}: PropsWithChildren<CalculatorProps>) => {
     <div className="grid grid-rows-5">
       <div className="flex justify-evenly h-12">
         <CalculatorButton
-          className="grow"
+          className="w-1/4"
           onClick={() => {
             dispatch &&
               dispatch({ type: CalculatorActionType.DIGIT, payload: "7" });
@@ -1254,7 +1254,7 @@ const Calculator = ({}: PropsWithChildren<CalculatorProps>) => {
           <div className="font-semibold uppercase">7</div>
         </CalculatorButton>
         <CalculatorButton
-          className="grow"
+          className="w-1/4"
           onClick={() => {
             dispatch &&
               dispatch({ type: CalculatorActionType.DIGIT, payload: "8" });
@@ -1263,7 +1263,7 @@ const Calculator = ({}: PropsWithChildren<CalculatorProps>) => {
           <div className="font-semibold uppercase">8</div>
         </CalculatorButton>
         <CalculatorButton
-          className="grow"
+          className="w-1/4"
           onClick={() => {
             dispatch &&
               dispatch({ type: CalculatorActionType.DIGIT, payload: "9" });
@@ -1283,7 +1283,7 @@ const Calculator = ({}: PropsWithChildren<CalculatorProps>) => {
       </div>
       <div className="flex justify-evenly h-12">
         <CalculatorButton
-          className="grow"
+          className="w-1/4"
           onClick={() => {
             dispatch &&
               dispatch({ type: CalculatorActionType.DIGIT, payload: "4" });
@@ -1292,7 +1292,7 @@ const Calculator = ({}: PropsWithChildren<CalculatorProps>) => {
           <div className="font-semibold uppercase">4</div>
         </CalculatorButton>
         <CalculatorButton
-          className="grow"
+          className="w-1/4"
           onClick={() => {
             dispatch &&
               dispatch({ type: CalculatorActionType.DIGIT, payload: "5" });
@@ -1301,7 +1301,7 @@ const Calculator = ({}: PropsWithChildren<CalculatorProps>) => {
           <div className="font-semibold uppercase">5</div>
         </CalculatorButton>
         <CalculatorButton
-          className="grow"
+          className="w-1/4"
           onClick={() => {
             dispatch &&
               dispatch({ type: CalculatorActionType.DIGIT, payload: "6" });
@@ -1321,7 +1321,7 @@ const Calculator = ({}: PropsWithChildren<CalculatorProps>) => {
       </div>
       <div className="flex justify-evenly h-12">
         <CalculatorButton
-          className="grow"
+          className="w-1/4"
           onClick={() => {
             dispatch &&
               dispatch({ type: CalculatorActionType.DIGIT, payload: "1" });
@@ -1330,7 +1330,7 @@ const Calculator = ({}: PropsWithChildren<CalculatorProps>) => {
           <div className="font-semibold uppercase">1</div>
         </CalculatorButton>
         <CalculatorButton
-          className="grow"
+          className="w-1/4"
           onClick={() => {
             dispatch &&
               dispatch({ type: CalculatorActionType.DIGIT, payload: "2" });
@@ -1339,7 +1339,7 @@ const Calculator = ({}: PropsWithChildren<CalculatorProps>) => {
           <div className="font-semibold uppercase">2</div>
         </CalculatorButton>
         <CalculatorButton
-          className="grow"
+          className="w-1/4"
           onClick={() => {
             dispatch &&
               dispatch({ type: CalculatorActionType.DIGIT, payload: "3" });
@@ -1359,7 +1359,7 @@ const Calculator = ({}: PropsWithChildren<CalculatorProps>) => {
       </div>
       <div className="flex justify-evenly h-12">
         <CalculatorButton
-          className="grow"
+          className="w-1/4"
           onClick={() => {
             dispatch &&
               dispatch({ type: CalculatorActionType.CLEAR, payload: "" });
@@ -1368,7 +1368,7 @@ const Calculator = ({}: PropsWithChildren<CalculatorProps>) => {
           <div className="font-semibold uppercase">clear</div>
         </CalculatorButton>
         <CalculatorButton
-          className="grow"
+          className="w-1/4"
           onClick={() => {
             dispatch &&
               dispatch({ type: CalculatorActionType.DIGIT, payload: "0" });
@@ -1377,7 +1377,7 @@ const Calculator = ({}: PropsWithChildren<CalculatorProps>) => {
           <div className="font-semibold uppercase">0</div>
         </CalculatorButton>
         <CalculatorButton
-          className="grow"
+          className="w-1/4"
           onClick={() => {
             dispatch &&
               dispatch({ type: CalculatorActionType.BACKSPACE, payload: "" });
