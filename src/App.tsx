@@ -263,7 +263,19 @@ const billReducer = (billModel: BillModel, action: BillAction) => {
     case BillActionType.CLEAR_FOOD:
       return { ...billModel, data: [] };
     case BillActionType.CLEAR_ALL_PEOPLE:
-      return { ...billModel, allPeople: [] };
+      billModel.data.forEach((o) => {
+        const keys = Object.keys(o);
+        o[keys[0]].people = [];
+        if (o[keys[0]].people.length > 0) {
+          o[keys[0]].amount = Math.ceil(
+            o[keys[0]].price / o[keys[0]].people.length
+          );
+        } else {
+          o[keys[0]].amount = 0;
+        }
+        console.log(o[keys[0]].amount);
+      });
+      return { ...billModel, data: [...billModel.data], allPeople: [] };
     case BillActionType.ADD_PROMPTPAY:
       const addPromptpayAction: AddPromptPayAction =
         action as AddPromptPayAction;
