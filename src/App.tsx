@@ -1040,7 +1040,7 @@ const AddFoodDialog = ({}: AddFoodDialogProps) => {
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
         <Dialog.Panel>
           <div
-            className={`fixed inset-0 flex flex-col ${openCalculatorDialog ? "justify-around" : "justify-center"} max-w-sm h-screen mx-auto`}
+            className={`fixed inset-0 flex flex-col ${openCalculatorDialog ? "justify-evenly" : "justify-center"} max-w-sm h-screen mx-auto`}
           >
             {/* Full-screen container to center the panel */}
             <div className={openCalculatorDialog ? "" : ""}>
