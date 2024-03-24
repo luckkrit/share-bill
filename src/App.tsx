@@ -127,6 +127,7 @@ enum BillActionType {
   CLEAR_FOOD = "CLEAR_FOOD",
   CLEAR_ALL_PEOPLE = "CLEAR_ALL_PEOPLE",
   ADD_PROMPTPAY = "ADD_PROMPTPAY",
+  DELETE_PEOPLE_ONLY = "DELETE_PEOPLE_ONLY",
 }
 
 interface BillAction {
@@ -162,6 +163,9 @@ interface AddAllPeopleAction extends BillAction {
 }
 interface AddPromptPayAction extends BillAction {
   phone: string;
+}
+interface DeletePeopleOnlyAction extends BillAction {
+  peopleName: string;
 }
 
 const billReducer = (billModel: BillModel, action: BillAction) => {
@@ -280,6 +284,35 @@ const billReducer = (billModel: BillModel, action: BillAction) => {
       const addPromptpayAction: AddPromptPayAction =
         action as AddPromptPayAction;
       return { ...billModel, promptpay: addPromptpayAction.phone };
+    case BillActionType.DELETE_PEOPLE_ONLY:
+      const deletePeopleOnlyAction: DeletePeopleOnlyAction =
+        action as DeletePeopleOnlyAction;
+      billModel.data.forEach((o) => {
+        const keys = Object.keys(o);
+        o[keys[0]].people = o[keys[0]].people.filter((p) => {
+          if (p !== deletePeopleOnlyAction.peopleName) {
+            return p;
+          }
+        });
+        if (o[keys[0]].people.length > 0) {
+          o[keys[0]].amount = Math.ceil(
+            o[keys[0]].price / o[keys[0]].people.length
+          );
+        } else {
+          o[keys[0]].amount = 0;
+        }
+        console.log(o[keys[0]].amount);
+      });
+      billModel.allPeople = billModel.allPeople.filter((p) => {
+        if (p.peopleName !== deletePeopleOnlyAction.peopleName) {
+          return p;
+        }
+      });
+      return {
+        ...billModel,
+        data: [...billModel.data],
+        allPeople: [...billModel.allPeople],
+      };
     default:
       throw Error("Unknown action: " + action.type);
   }
@@ -551,7 +584,7 @@ const getColorName = (
 };
 
 const peopleDetailItemVariants = cva(
-  `w-4/6 font-semibold break-words text-left`,
+  `w-5/12 font-semibold break-words text-left`,
   {
     variants: {
       variant: {
@@ -579,6 +612,7 @@ const PeopleDetailItem = ({
 }: PeopleDetailItemProps) => {
   const { newMenu } = useShareBillDialogContext();
   const dialogDispatch = useShareBillDialogDispatchContext();
+  const dispatch = useBillDispatchContext();
   const [paid, setPaid] = useState(false);
   return (
     <div className="flex py-3 items-center">
@@ -595,10 +629,10 @@ const PeopleDetailItem = ({
           </span>
         ) : null}
       </button>
-      <div className="w-1/6 text-zinc-600 text-xl text-right">
+      <div className="w-3/12 text-zinc-600 text-xl text-right">
         {getAmountFromPeople(bills, people.peopleName)}
       </div>
-      <div className="w-1/6 text-zinc-500 flex justify-end">
+      <div className="w-2/12 text-zinc-500 flex justify-end">
         <button
           onClick={() => {
             dialogDispatch &&
@@ -615,6 +649,19 @@ const PeopleDetailItem = ({
           }}
         >
           <VscListSelection />
+        </button>
+      </div>
+      <div className="w-2/12 text-red-500 flex justify-end">
+        <button
+          onClick={() => {
+            const deletePeopleOnlyAction: DeletePeopleOnlyAction = {
+              type: BillActionType.DELETE_PEOPLE_ONLY,
+              peopleName: people.peopleName,
+            };
+            dispatch && dispatch(deletePeopleOnlyAction);
+          }}
+        >
+          <FaTrash />
         </button>
       </div>
     </div>
@@ -737,7 +784,7 @@ const ShareBillApp = () => {
                 {getTotalPrice(billModel.data)}
               </div>
             </div>
-            <div>
+            <div className="flex flex-col items-center w-full">
               <div className="text-xl font-semibold text-zinc-500 ibm-plex-sans-thai-medium">
                 QR Code
               </div>
@@ -886,9 +933,14 @@ const ShareBillApp = () => {
                 </Tab.Panel>
                 <Tab.Panel>
                   <div className="flex pt-4 px-2 items-center">
-                    <div className="w-4/6 text-zinc-500">ชื่อคน</div>
-                    <div className="w-1/6 text-zinc-500 text-right">จ่าย</div>
-                    <div className="w-1/6 text-zinc-500 text-right">&nbsp;</div>
+                    <div className="w-5/12 text-zinc-500">ชื่อคน</div>
+                    <div className="w-3/12 text-zinc-500 text-right">จ่าย</div>
+                    <div className="w-2/12 text-zinc-500 text-right">
+                      &nbsp;
+                    </div>
+                    <div className="w-2/12 text-zinc-500 text-right">
+                      &nbsp;
+                    </div>
                   </div>
                   <div className="grid grid-cols-1 divide-y px-2">
                     {billModel.allPeople.map((people) => (
