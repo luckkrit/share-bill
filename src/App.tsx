@@ -916,7 +916,7 @@ const ShareBillApp = () => {
                           ) !== undefined
                         ) {
                           alert("ชื่อคนซ้ำกัน");
-                        } else {
+                        } else if (peopleName.trim().length > 0) {
                           const addAllPeopleAction: AddAllPeopleAction = {
                             type: BillActionType.ADD_ALL_PEOPLE,
                             peopleName,
@@ -1195,7 +1195,7 @@ const FoodPanel = ({}: PropsWithChildren<FoodPanelProps>) => {
               undefined
             ) {
               alert("ชื่อคนซ้ำกัน");
-            } else {
+            } else if (peopleName.trim().length > 0) {
               const addAllPeopleAction: AddAllPeopleAction = {
                 type: BillActionType.ADD_ALL_PEOPLE,
                 peopleName,
