@@ -1043,15 +1043,13 @@ const AddFoodDialog = ({}: AddFoodDialogProps) => {
             className={`fixed inset-0 flex flex-col ${openCalculatorDialog ? "justify-between" : "justify-center"} max-w-sm h-screen mx-auto`}
           >
             {/* Full-screen container to center the panel */}
-            <div className={openCalculatorDialog ? "items-start" : ""}>
+            <div className={openCalculatorDialog ? "" : ""}>
               {/* Add Food */}
               <div className="mx-auto rounded bg-white">
                 <FoodPanel />
               </div>
             </div>
-            <div
-              className={`items-end ${openCalculatorDialog ? "visible" : "hidden"}`}
-            >
+            <div className={` ${openCalculatorDialog ? "visible" : "hidden"}`}>
               {/* Calculator */}
               <div className="mx-auto rounded bg-white">
                 <Calculator />
@@ -1094,12 +1092,12 @@ const FoodPanel = ({}: PropsWithChildren<FoodPanelProps>) => {
     dispatch && dispatch(updateFoodPriceAction);
   }, [priceResult]);
   return (
-    <div className="w-full p-4 ibm-plex-sans-thai-regular">
+    <div className="w-full p-2 ibm-plex-sans-thai-regular">
       <div className="flex flex-col items-center">
         <div className="text-zinc-500">รายการ</div>
         <div className="text-blue-400 text-2xl font-semibold">{newMenu}</div>
         <input
-          className="py-4 w-full text-4xl border-b-2 text-center outline-none"
+          className="py-2 w-full text-4xl border-b-2 text-center outline-none"
           readOnly
           value={priceResult}
           onClick={() => {
@@ -1230,7 +1228,7 @@ const FoodPanel = ({}: PropsWithChildren<FoodPanelProps>) => {
             calDispatch({ type: CalculatorActionType.CLEAR, payload: "" });
         }}
         type="button"
-        className="text-white bg-sky-500 hover:bg-sky-800 focus:ring-4 focus:ring-sky-300 font-medium rounded-lg text-sm px-8 py-2.5 my-4 grow w-full"
+        className="text-white bg-sky-500 hover:bg-sky-800 focus:ring-4 focus:ring-sky-300 font-medium rounded-lg text-sm px-8 py-2.5 my-2 grow w-full"
       >
         ตกลง
       </button>
