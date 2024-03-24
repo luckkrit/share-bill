@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { cva, VariantProps } from "class-variance-authority";
 import { Tab, Dialog } from "@headlessui/react";
-import { VscListSelection } from "react-icons/vsc";
+import { VscDiffAdded, VscListSelection } from "react-icons/vsc";
 import { MdPeopleAlt } from "react-icons/md";
 import {
   FaRegCopy,
@@ -26,6 +26,12 @@ import React, {
 } from "react";
 import { cn } from "./lib/utils";
 import uniq from "lodash/uniq";
+import { CopyToClipboard } from "react-copy-to-clipboard";
+import {
+  useFloating,
+  useInteractions,
+  autoPlacement,
+} from "@floating-ui/react";
 
 enum ShareBillDialogType {
   ADD_FOOD = "ADD_FOOD",
@@ -33,6 +39,9 @@ enum ShareBillDialogType {
   CLOSE = "CLOSE",
   SHOW_CALCULATOR = "SHOW_CALCULATOR",
   HIDE_CALCULATOR = "HIDE_CALCULATOR",
+  UPDATE_PAYMENT = "UPDATE_PAYMENT",
+  SHARE_MENU = "SHARE_MENU",
+  SHARE_PEOPLE = "SHARE_PEOPLE",
 }
 
 interface ShareBillDialogAction {
@@ -43,6 +52,9 @@ interface ShareBillDialogAction {
 interface ShareBillDialogState {
   openFoodDialog: boolean;
   openCalculatorDialog: boolean;
+  openPaymentDialog: boolean;
+  newMenu: string;
+  peopleName: string;
 }
 
 const ShareBillDialogReducer = (
@@ -61,14 +73,23 @@ const ShareBillDialogReducer = (
       return { ...state, ...action.payload };
     case ShareBillDialogType.HIDE_CALCULATOR:
       return { ...state, ...action.payload };
+    case ShareBillDialogType.UPDATE_PAYMENT:
+      return { ...state, ...action.payload };
+    case ShareBillDialogType.SHARE_MENU:
+      return { ...state, ...action.payload };
+    case ShareBillDialogType.SHARE_PEOPLE:
+      return { ...state, ...action.payload };
     default:
       throw Error("Unknown action: " + action.type);
   }
 };
 
 const ShareBillDialogContext = createContext({
-  openFoodDialog: true,
-  openCalculatorDialog: true,
+  openFoodDialog: false,
+  openCalculatorDialog: false,
+  openPaymentDialog: false,
+  newMenu: "",
+  peopleName: "",
 });
 
 const ShareBillDialogDispatchContext =
@@ -78,6 +99,9 @@ const ShareBillDialogProvider = ({ children }: PropsWithChildren) => {
   const [state, dispatch] = useReducer(ShareBillDialogReducer, {
     openFoodDialog: false,
     openCalculatorDialog: false,
+    openPaymentDialog: false,
+    newMenu: "",
+    peopleName: "",
   });
   return (
     <ShareBillDialogContext.Provider value={state}>
@@ -101,6 +125,7 @@ enum BillActionType {
   ADD_ALL_PEOPLE = "ADD_ALL_PEOPLE",
   CLEAR_FOOD = "CLEAR_FOOD",
   CLEAR_ALL_PEOPLE = "CLEAR_ALL_PEOPLE",
+  ADD_PROMPTPAY = "ADD_PROMPTPAY",
 }
 
 interface BillAction {
@@ -134,8 +159,9 @@ interface AddAllPeopleAction extends BillAction {
   peopleName: string;
   badgeColor: string;
 }
-interface ClearFoodAction extends BillAction {}
-interface ClearAllPeople extends BillAction {}
+interface AddPromptPayAction extends BillAction {
+  phone: string;
+}
 
 const billReducer = (billModel: BillModel, action: BillAction) => {
   switch (action.type) {
@@ -237,6 +263,10 @@ const billReducer = (billModel: BillModel, action: BillAction) => {
       return { ...billModel, data: [] };
     case BillActionType.CLEAR_ALL_PEOPLE:
       return { ...billModel, allPeople: [] };
+    case BillActionType.ADD_PROMPTPAY:
+      const addPromptpayAction: AddPromptPayAction =
+        action as AddPromptPayAction;
+      return { ...billModel, promptpay: addPromptpayAction.phone };
     default:
       throw Error("Unknown action: " + action.type);
   }
@@ -362,12 +392,14 @@ interface People {
   peopleName: string;
   badgeColor: string;
 }
-interface BillModel {
+type BillModel = {
   data: Record<string, Order>[];
   promptpay?: string;
   amount?: number;
   allPeople: People[];
-}
+};
+
+type ExportBill = Omit<BillModel, "allPeople">;
 
 const getPeople = (bills: Record<string, Order>[]) => {
   let people: string[] = [];
@@ -525,6 +557,8 @@ const PeopleDetailItem = ({
   people,
   variant,
 }: PeopleDetailItemProps) => {
+  const { newMenu } = useShareBillDialogContext();
+  const dialogDispatch = useShareBillDialogDispatchContext();
   const [paid, setPaid] = useState(false);
   return (
     <div className="flex py-3 items-center">
@@ -545,7 +579,21 @@ const PeopleDetailItem = ({
         {getAmountFromPeople(bills, people.peopleName)}
       </div>
       <div className="w-1/6 text-zinc-500 flex justify-end">
-        <button onClick={() => {}}>
+        <button
+          onClick={() => {
+            dialogDispatch &&
+              dialogDispatch({
+                type: ShareBillDialogType.UPDATE_PAYMENT,
+                payload: {
+                  openCalculatorDialog: false,
+                  openFoodDialog: false,
+                  openPaymentDialog: true,
+                  newMenu,
+                  peopleName: people.peopleName,
+                },
+              });
+          }}
+        >
           <VscListSelection />
         </button>
       </div>
@@ -556,16 +604,17 @@ const PeopleDetailItem = ({
 interface MenuDetailItemProps {
   menu: string;
   order: Order;
-  setNewMenu: React.Dispatch<React.SetStateAction<string>>;
+  // setNewMenu: React.Dispatch<React.SetStateAction<string>>;
   allPeople: People[];
 }
 const MenuDetailItem = ({
   menu,
   order,
-  setNewMenu,
+  // setNewMenu,
   allPeople,
 }: MenuDetailItemProps) => {
   console.log(order);
+  const { peopleName } = useShareBillDialogContext();
   const dispatch = useBillDispatchContext();
   const dialogDispatch = useShareBillDialogDispatchContext();
   return (
@@ -579,9 +628,12 @@ const MenuDetailItem = ({
               payload: {
                 openCalculatorDialog: false,
                 openFoodDialog: true,
+                openPaymentDialog: false,
+                newMenu: menu,
+                peopleName,
               },
             });
-          setNewMenu(() => menu);
+          // setNewMenu(() => menu);
         }}
       >
         {menu}
@@ -621,12 +673,29 @@ const MenuDetailItem = ({
 };
 
 const ShareBillApp = () => {
-  const [openPeoplePaymentDialog, setOpenPeoplePaymentDialog] = useState(false);
-  const [peopleName, setPeopleName] = useState("");
-  const [newMenu, setNewMenu] = useState("");
+  // const [peopleName, setPeopleName] = useState("");
+  // const [newMenu, setNewMenu] = useState("");
+  const { newMenu, peopleName, ...state } = useShareBillDialogContext();
   const billModel = useBillContext();
   const dispatch = useBillDispatchContext();
   const dialogDispatch = useShareBillDialogDispatchContext();
+  const exportBill: ExportBill = {
+    data: billModel.data,
+    promptpay: billModel.promptpay,
+  };
+  const url = `${window.location.protocol}://${window.location.host}/?bill=${encodeURI(JSON.stringify(exportBill))}`;
+
+  const [isOpen, setIsOpen] = useState(false);
+
+  const { refs, floatingStyles } = useFloating({
+    open: isOpen,
+    onOpenChange: setIsOpen,
+    middleware: [autoPlacement()],
+  });
+
+  const { getReferenceProps, getFloatingProps } = useInteractions([]);
+  // console.log(url);
+  // const [phone, setPhone] = useState("");
   return (
     <>
       <div className="max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto ibm-plex-sans-thai-regular overflow-hidden">
@@ -650,12 +719,31 @@ const ShareBillApp = () => {
             </div>
             <div>
               <div className="text-xl font-semibold text-zinc-500 ibm-plex-sans-thai-medium">
-                จ่ายเงิน
+                QR Code
               </div>
-              <img
-                src="https://promptpay.io/0891671761/222.png"
-                className="w-16"
-              ></img>
+              <button
+                className="mt-2"
+                onClick={() => {
+                  let phone = prompt("ใส่เบอร์ Promptpay", "08xxxxxxxx");
+                  if (phone !== null) {
+                    const addPromptPayAction: AddPromptPayAction = {
+                      type: BillActionType.ADD_PROMPTPAY,
+                      phone,
+                    };
+                    dispatch && dispatch(addPromptPayAction);
+                  }
+                }}
+              >
+                {billModel.promptpay !== undefined &&
+                billModel.promptpay.length === 10 ? (
+                  <img
+                    src={`https://promptpay.io/${billModel.promptpay}.png`}
+                    className="w-16"
+                  ></img>
+                ) : (
+                  <VscDiffAdded className="w-10 h-10" />
+                )}
+              </button>
             </div>
           </div>
           <div className="w-full mt-6">
@@ -708,7 +796,7 @@ const ShareBillApp = () => {
                             menu={keys[0]}
                             order={o[keys[0]]}
                             allPeople={billModel.allPeople}
-                            setNewMenu={setNewMenu}
+                            // setNewMenu={setNewMenu}
                           />
                         );
                       }
@@ -720,7 +808,17 @@ const ShareBillApp = () => {
                     <input
                       className="outline-none border-b-2 w-5/6 text-zinc-500"
                       placeholder="ระบุรายการ"
-                      onChange={(e) => setNewMenu(() => e.target.value)}
+                      onChange={(e) => {
+                        dialogDispatch &&
+                          dialogDispatch({
+                            type: ShareBillDialogType.SHARE_MENU,
+                            payload: {
+                              ...state,
+                              newMenu: e.target.value,
+                              peopleName,
+                            },
+                          });
+                      }}
                       value={newMenu}
                     />
                     <button
@@ -740,6 +838,9 @@ const ShareBillApp = () => {
                               payload: {
                                 openFoodDialog: true,
                                 openCalculatorDialog: true,
+                                openPaymentDialog: false,
+                                newMenu,
+                                peopleName: "",
                               },
                             });
                         }
@@ -776,6 +877,7 @@ const ShareBillApp = () => {
                   <div className="grid grid-cols-1 divide-y px-2">
                     {billModel.allPeople.map((people) => (
                       <PeopleDetailItem
+                        key={people.peopleName}
                         people={people}
                         bills={billModel.data}
                         variant={getColorName(people.badgeColor)}
@@ -787,7 +889,17 @@ const ShareBillApp = () => {
                     <input
                       className="outline-none border-b-2 w-5/6 text-zinc-500"
                       placeholder="ระบุชื่อ"
-                      onChange={(e) => setPeopleName(e.target.value)}
+                      onChange={(e) => {
+                        dialogDispatch &&
+                          dialogDispatch({
+                            type: ShareBillDialogType.SHARE_PEOPLE,
+                            payload: {
+                              ...state,
+                              newMenu,
+                              peopleName: e.target.value,
+                            },
+                          });
+                      }}
                       value={peopleName}
                     />
                     <button
@@ -807,7 +919,15 @@ const ShareBillApp = () => {
                             badgeColor: getColor(billModel.allPeople.length),
                           };
                           dispatch && dispatch(addAllPeopleAction);
-                          setPeopleName(() => "");
+                          dialogDispatch &&
+                            dialogDispatch({
+                              type: ShareBillDialogType.SHARE_PEOPLE,
+                              payload: {
+                                ...state,
+                                newMenu,
+                                peopleName: "",
+                              },
+                            });
                         }
                       }}
                     >
@@ -841,33 +961,58 @@ const ShareBillApp = () => {
           <input
             type="text"
             className="border border-gray-300 outline-none rounded bg-gray-50 pl-2 pr-10 h-8 w-full"
+            value={url}
           />
-          <button className="absolute right-4 border-l w-8 flex justify-center py-0 h-8 items-center">
-            <FaRegCopy />
-          </button>
+          <CopyToClipboard
+            text={url}
+            onCopy={(_, result) => {
+              if (result) {
+                setIsOpen(() => true);
+                setTimeout(() => {
+                  setIsOpen(() => false);
+                }, 3000);
+              }
+            }}
+          >
+            <button
+              className="absolute right-4 border-l w-8 flex justify-center py-0 h-8 items-center"
+              ref={refs.setReference}
+              {...getReferenceProps()}
+            >
+              <FaRegCopy />
+            </button>
+          </CopyToClipboard>
+          {isOpen && (
+            <div
+              ref={refs.setFloating}
+              style={floatingStyles}
+              {...getFloatingProps()}
+              className="bg-white text-gray-800 p-2 border rounded shadow-md"
+            >
+              Copied!
+            </div>
+          )}
         </div>
       </div>
-      <AddFoodDialog newMenu={newMenu} setNewMenu={setNewMenu} />
-      <AddPeoplePaymentDialog
-        openPeoplePaymentDialog={openPeoplePaymentDialog}
-        setOpenPeoplePaymentDialog={setOpenPeoplePaymentDialog}
-      />
+      <AddFoodDialog />
+      <AddPeoplePaymentDialog />
     </>
   );
 };
 
 interface AddFoodDialogProps {
-  newMenu: string;
-  setNewMenu: React.Dispatch<React.SetStateAction<string>>;
+  // newMenu: string;
+  // setNewMenu: React.Dispatch<React.SetStateAction<string>>;
 }
-const AddFoodDialog = ({ newMenu, setNewMenu }: AddFoodDialogProps) => {
+const AddFoodDialog = ({}: AddFoodDialogProps) => {
   const dialogDispatch = useShareBillDialogDispatchContext();
-  const { openFoodDialog, openCalculatorDialog } = useShareBillDialogContext();
-  useEffect(() => {
-    if (!openFoodDialog) {
-      setNewMenu(() => "");
-    }
-  }, [openFoodDialog]);
+  const { openFoodDialog, openCalculatorDialog, newMenu, peopleName } =
+    useShareBillDialogContext();
+  // useEffect(() => {
+  //   if (!openFoodDialog) {
+  //     setNewMenu(() => "");
+  //   }
+  // }, [openFoodDialog]);
   return (
     <CalculatorProvider>
       <Dialog
@@ -876,7 +1021,13 @@ const AddFoodDialog = ({ newMenu, setNewMenu }: AddFoodDialogProps) => {
           dialogDispatch &&
             dialogDispatch({
               type: ShareBillDialogType.CLOSE,
-              payload: { openCalculatorDialog: false, openFoodDialog: false },
+              payload: {
+                openCalculatorDialog: false,
+                openFoodDialog: false,
+                openPaymentDialog: false,
+                newMenu,
+                peopleName,
+              },
             });
         }}
         className="relative z-50"
@@ -891,7 +1042,7 @@ const AddFoodDialog = ({ newMenu, setNewMenu }: AddFoodDialogProps) => {
             <div className={openCalculatorDialog ? "items-start pt-32" : ""}>
               {/* Add Food */}
               <div className="mx-auto rounded bg-white">
-                <FoodPanel newMenu={newMenu} />
+                <FoodPanel />
               </div>
             </div>
             <div
@@ -910,15 +1061,16 @@ const AddFoodDialog = ({ newMenu, setNewMenu }: AddFoodDialogProps) => {
 };
 
 interface FoodPanelProps extends HTMLAttributes<HTMLDivElement> {
-  newMenu: string;
+  // newMenu: string;
 }
-const FoodPanel = ({ newMenu }: PropsWithChildren<FoodPanelProps>) => {
+const FoodPanel = ({}: PropsWithChildren<FoodPanelProps>) => {
   const [peopleName, setPeopleName] = useState("");
   const priceResult = useCalculatorContext();
   const billModel = useBillContext();
   const dispatch = useBillDispatchContext();
   const calDispatch = useCalculatorDispatchContext();
   const dialogDispatch = useShareBillDialogDispatchContext();
+  const { newMenu } = useShareBillDialogContext();
   useEffect(() => {
     const menuPrice = getMenuPrice(billModel.data, newMenu);
     if (menuPrice !== 0) {
@@ -950,7 +1102,13 @@ const FoodPanel = ({ newMenu }: PropsWithChildren<FoodPanelProps>) => {
             dialogDispatch &&
               dialogDispatch({
                 type: ShareBillDialogType.SHOW_CALCULATOR,
-                payload: { openCalculatorDialog: true, openFoodDialog: true },
+                payload: {
+                  openCalculatorDialog: true,
+                  openFoodDialog: true,
+                  openPaymentDialog: false,
+                  newMenu,
+                  peopleName: "",
+                },
               });
           }}
         />
@@ -1056,7 +1214,13 @@ const FoodPanel = ({ newMenu }: PropsWithChildren<FoodPanelProps>) => {
           dialogDispatch &&
             dialogDispatch({
               type: ShareBillDialogType.CLOSE,
-              payload: { openCalculatorDialog: false, openFoodDialog: false },
+              payload: {
+                openCalculatorDialog: false,
+                openFoodDialog: false,
+                openPaymentDialog: false,
+                newMenu: "",
+                peopleName: "",
+              },
             });
           calDispatch &&
             calDispatch({ type: CalculatorActionType.CLEAR, payload: "" });
@@ -1074,6 +1238,7 @@ interface CalculatorProps extends HTMLAttributes<HTMLDivElement> {}
 const Calculator = ({}: PropsWithChildren<CalculatorProps>) => {
   const dispatch = useCalculatorDispatchContext();
   const dialogDispatch = useShareBillDialogDispatchContext();
+  const { newMenu, peopleName } = useShareBillDialogContext();
   return (
     <div className="grid grid-rows-5">
       <div className="flex h-12">
@@ -1235,7 +1400,13 @@ const Calculator = ({}: PropsWithChildren<CalculatorProps>) => {
             dialogDispatch &&
               dialogDispatch({
                 type: ShareBillDialogType.HIDE_CALCULATOR,
-                payload: { openCalculatorDialog: false, openFoodDialog: true },
+                payload: {
+                  openCalculatorDialog: false,
+                  openFoodDialog: true,
+                  openPaymentDialog: false,
+                  newMenu,
+                  peopleName,
+                },
               });
           }}
         >
@@ -1278,83 +1449,139 @@ const CalculatorButton = ({
   );
 };
 
-interface AddPeoplePaymentDialogProps {
-  openPeoplePaymentDialog: boolean;
-  setOpenPeoplePaymentDialog: React.Dispatch<React.SetStateAction<boolean>>;
+interface MenuPaymentDetailsProps {
+  menu: string;
+  order: Order;
 }
-const AddPeoplePaymentDialog = ({
-  openPeoplePaymentDialog,
-  setOpenPeoplePaymentDialog,
-}: AddPeoplePaymentDialogProps) => {
+const MenuPaymentDetails = ({ menu, order }: MenuPaymentDetailsProps) => {
+  const { peopleName } = useShareBillDialogContext();
+  const dispatch = useBillDispatchContext();
+  const [isMark, setIsMark] = useState(false);
+  return (
+    <div className="flex pt-4 px-2">
+      <div className={"w-6/12 " + (isMark ? "text-blue-500" : "text-zinc-500")}>
+        <button
+          onClick={() => {
+            // Add this people to this menu
+            if (!isMark) {
+              const addPeopleAction: AddPeopleAction = {
+                type: BillActionType.ADD_PEOPLE,
+                foodName: menu,
+                peopleName: peopleName,
+              };
+              dispatch && dispatch(addPeopleAction);
+            } else {
+              const deletePeopleAction: DeletePeopleAction = {
+                type: BillActionType.DELETE_PEOPLE,
+                foodName: menu,
+                peopleName: peopleName,
+              };
+              dispatch && dispatch(deletePeopleAction);
+            }
+            setIsMark((o) => !o);
+          }}
+        >
+          <div className="flex items-center">
+            {isMark ? <FaCheck /> : <FaPlus />}
+            <div
+              className={
+                "font-semibold text-2xl ms-2 " +
+                (isMark ? "text-blue-600" : "text-zinc-600")
+              }
+            >
+              {menu}
+            </div>
+          </div>
+        </button>
+      </div>
+      <div className="w-3/12 text-zinc-500 text-xl text-right">
+        {order.price}
+      </div>
+      <div className="w-3/12 text-zinc-500 text-2xl text-right">
+        {order.amount}
+      </div>
+    </div>
+  );
+};
+
+interface AddPeoplePaymentDialogProps {}
+const AddPeoplePaymentDialog = ({}: AddPeoplePaymentDialogProps) => {
+  const billModel = useBillContext();
+  const { openPaymentDialog, peopleName, ...state } =
+    useShareBillDialogContext();
+  const dialogDispatch = useShareBillDialogDispatchContext();
   return (
     <Dialog
-      open={openPeoplePaymentDialog}
-      onClose={() => setOpenPeoplePaymentDialog(false)}
+      open={openPaymentDialog}
+      onClose={() => {
+        dialogDispatch &&
+          dialogDispatch({
+            type: ShareBillDialogType.CLOSE,
+            payload: {
+              ...state,
+              openCalculatorDialog: false,
+              openFoodDialog: false,
+              openPaymentDialog: false,
+              peopleName: "",
+            },
+          });
+      }}
       className="relative z-50"
     >
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
 
       <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
         <Dialog.Panel className="mx-auto rounded bg-white">
-          <AddPeoplePaymentPanel
-            setOpenPeoplePaymentDialog={setOpenPeoplePaymentDialog}
-          />
+          <div className="w-[424px] p-4 ibm-plex-sans-thai-regular">
+            <div className="flex flex-col items-center">
+              <div className="text-zinc-500">ยอดชำระ</div>
+              <div className="text-blue-400 text-2xl font-semibold">
+                {peopleName}
+              </div>
+            </div>
+
+            <div className="flex pt-4 px-2">
+              <div className="w-6/12 text-zinc-500">ชื่อรายการ</div>
+              <div className="w-3/12 text-zinc-500 text-right">ราคา</div>
+              <div className="w-3/12 text-zinc-500 text-right">จ่าย</div>
+            </div>
+            <div className="grid grid-cols-1 divide-y">
+              {billModel.data.map((o) => {
+                const keys = Object.keys(o);
+                return <MenuPaymentDetails menu={keys[0]} order={o[keys[0]]} />;
+              })}
+            </div>
+            <div className="flex px-2 pt-4">
+              <div className="w-6/12 font-semibold text-2xl">ยอดรวม</div>
+              <div className="w-6/12 text-right font-semibold text-2xl">
+                {getAmountFromPeople(billModel.data, peopleName)}
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                // setOpenAddPeoplePaymentDialog(() => false);
+                dialogDispatch &&
+                  dialogDispatch({
+                    type: ShareBillDialogType.CLOSE,
+                    payload: {
+                      ...state,
+                      openCalculatorDialog: false,
+                      openFoodDialog: false,
+                      openPaymentDialog: false,
+                      peopleName: "",
+                    },
+                  });
+              }}
+              type="button"
+              className="text-white bg-sky-500 hover:bg-sky-800 focus:ring-4 focus:ring-sky-300 font-medium rounded-lg text-sm px-8 py-2.5 mt-4 grow w-full"
+            >
+              ตกลง
+            </button>
+          </div>
         </Dialog.Panel>
       </div>
     </Dialog>
-  );
-};
-
-interface AddPeoplePaymentPanelProps {
-  setOpenPeoplePaymentDialog: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-const AddPeoplePaymentPanel = ({
-  setOpenPeoplePaymentDialog: setOpenAddPeoplePaymentDialog,
-}: AddPeoplePaymentPanelProps) => {
-  return (
-    <div className="w-[424px] p-4 ibm-plex-sans-thai-regular">
-      <div className="flex flex-col items-center">
-        <div className="text-zinc-500">ยอดชำระ</div>
-        <div className="text-blue-400 text-2xl font-semibold">jjjชื่อคน</div>
-      </div>
-
-      <div className="flex pt-4 px-2">
-        <div className="w-6/12 text-zinc-500">ชื่อรายการ</div>
-        <div className="w-3/12 text-zinc-500 text-right">ราคา</div>
-        <div className="w-3/12 text-zinc-500 text-right">จ่าย</div>
-      </div>
-      <div className="grid grid-cols-1 divide-y">
-        <div className="flex pt-4 px-2">
-          <div className="w-6/12 text-zinc-500">
-            <button>
-              <div className="flex items-center">
-                <FaPlus />
-                <div className="text-zinc-600 font-semibold text-2xl ms-2">
-                  jj
-                </div>
-              </div>
-            </button>
-          </div>
-          <div className="w-3/12 text-zinc-500 text-xl text-right">0</div>
-          <div className="w-3/12 text-zinc-500 text-2xl text-right">0</div>
-        </div>
-      </div>
-      <div className="flex px-2 pt-4">
-        <div className="w-6/12 font-semibold text-2xl">ยอดรวม</div>
-        <div className="w-6/12 text-right font-semibold text-2xl">0</div>
-      </div>
-
-      <button
-        onClick={() => {
-          setOpenAddPeoplePaymentDialog(() => false);
-        }}
-        type="button"
-        className="text-white bg-sky-500 hover:bg-sky-800 focus:ring-4 focus:ring-sky-300 font-medium rounded-lg text-sm px-8 py-2.5 mt-4 grow w-full"
-      >
-        ตกลง
-      </button>
-    </div>
   );
 };
 
@@ -1481,10 +1708,6 @@ export default meta;
 type Story = StoryObj<typeof ShareBillApp>;
 
 export const MainApp: Story = {
-  args: {},
-};
-
-export const AddFoodModal: Story = {
   render: () => {
     return (
       <ShareBillDialogProvider>
