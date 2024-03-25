@@ -750,7 +750,7 @@ const ShareBillApp = () => {
     data: billModel.data,
     promptpay: billModel.promptpay,
   };
-  const url = `${window.location.protocol}://${window.location.host}${window.location.pathname}?bill=${encodeURI(JSON.stringify(exportBill))}`;
+  const url = `${window.location.protocol}//${window.location.host}${window.location.pathname}?bill=${encodeURI(JSON.stringify(exportBill))}`;
 
   const [isOpen, setIsOpen] = useState(false);
 
