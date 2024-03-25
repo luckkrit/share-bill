@@ -340,7 +340,6 @@ const BillProvider = ({ children }: PropsWithChildren) => {
           amount: 0,
           allPeople: [],
         };
-  billObject = { ...billObject, allPeople: [] };
   const [billModel, dispatch] = useReducer(billReducer, billObject);
   return (
     <BillContext.Provider value={billModel}>
@@ -452,7 +451,7 @@ type BillModel = {
   allPeople: People[];
 };
 
-type ExportBill = Omit<BillModel, "allPeople">;
+// type ExportBill = Omit<BillModel, "allPeople">;
 
 const getPeople = (bills: Record<string, Order>[]) => {
   let people: string[] = [];
@@ -760,11 +759,7 @@ const ShareBillApp = () => {
   const billModel = useBillContext();
   const dispatch = useBillDispatchContext();
   const dialogDispatch = useShareBillDialogDispatchContext();
-  const exportBill: ExportBill = {
-    data: billModel.data,
-    promptpay: billModel.promptpay,
-  };
-  const url = `${window.location.protocol}//${window.location.host}${window.location.pathname}?bill=${encodeURI(JSON.stringify(exportBill))}`;
+  const url = `${window.location.protocol}//${window.location.host}${window.location.pathname}?bill=${encodeURI(JSON.stringify(billModel))}`;
 
   const [isOpen, setIsOpen] = useState(false);
 
