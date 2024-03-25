@@ -465,6 +465,20 @@ const getPeople = (bills: Record<string, Order>[]) => {
   return uniq(people);
 };
 
+const checkPeopleFromFood = (
+  bills: Record<string, Order>[],
+  foodName: string,
+  peopleName: string
+) => {
+  let isCheck = false;
+  bills.forEach((o) => {
+    const keys = Object.keys(o);
+    if (keys[0] === foodName && o[keys[0]].people.indexOf(peopleName) > -1) {
+      isCheck = true;
+    }
+  });
+  return isCheck;
+};
 const getPeopleFromFood = (
   bills: Record<string, Order>[],
   foodName: string
@@ -1533,13 +1547,20 @@ const CalculatorButton = ({
 };
 
 interface MenuPaymentDetailsProps {
+  peopleName: string;
   menu: string;
   order: Order;
 }
-const MenuPaymentDetails = ({ menu, order }: MenuPaymentDetailsProps) => {
-  const { peopleName } = useShareBillDialogContext();
+const MenuPaymentDetails = ({
+  peopleName,
+  menu,
+  order,
+}: MenuPaymentDetailsProps) => {
+  const billModel = useBillContext();
   const dispatch = useBillDispatchContext();
-  const [isMark, setIsMark] = useState(false);
+  const [isMark, setIsMark] = useState(
+    checkPeopleFromFood(billModel.data, menu, peopleName)
+  );
   return (
     <div className="flex pt-4 px-2">
       <div className={"w-6/12 " + (isMark ? "text-blue-500" : "text-zinc-500")}>
@@ -1581,7 +1602,7 @@ const MenuPaymentDetails = ({ menu, order }: MenuPaymentDetailsProps) => {
         {order.price}
       </div>
       <div className="w-3/12 text-zinc-500 text-2xl text-right">
-        {order.amount}
+        {isMark ? order.amount : 0}
       </div>
     </div>
   );
@@ -1635,6 +1656,7 @@ const AddPeoplePaymentDialog = ({}: AddPeoplePaymentDialogProps) => {
                   <MenuPaymentDetails
                     key={keys[0]}
                     menu={keys[0]}
+                    peopleName={peopleName}
                     order={o[keys[0]]}
                   />
                 );
