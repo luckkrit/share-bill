@@ -786,18 +786,28 @@ const ShareBillApp = () => {
             </div>
             <div className="flex flex-col items-center w-full">
               <div className="text-xl font-semibold text-zinc-500 ibm-plex-sans-thai-medium">
-                QR Code
+                {billModel.promptpay !== undefined &&
+                billModel.promptpay.length === 10
+                  ? billModel.promptpay
+                  : "QR Code"}
               </div>
               <button
                 className="mt-2"
                 onClick={() => {
                   let phone = prompt("ใส่เบอร์ Promptpay", "08xxxxxxxx");
                   if (phone !== null) {
-                    const addPromptPayAction: AddPromptPayAction = {
-                      type: BillActionType.ADD_PROMPTPAY,
-                      phone,
-                    };
-                    dispatch && dispatch(addPromptPayAction);
+                    let isnum = /^\d+$/.test(phone);
+                    if (isnum && phone.trim().length === 10) {
+                      const addPromptPayAction: AddPromptPayAction = {
+                        type: BillActionType.ADD_PROMPTPAY,
+                        phone,
+                      };
+                      dispatch && dispatch(addPromptPayAction);
+                    } else {
+                      alert("กรุณากรอกเบอร์โทรศัพท์ 10 หลัก");
+                    }
+                  } else {
+                    alert("กรุณากรอกเบอร์โทรศัพท์ 10 หลัก");
                   }
                 }}
               >
@@ -806,6 +816,13 @@ const ShareBillApp = () => {
                   <img
                     src={`https://promptpay.io/${billModel.promptpay}.png`}
                     className="w-16"
+                    onError={() => {
+                      const addPromptPayAction: AddPromptPayAction = {
+                        type: BillActionType.ADD_PROMPTPAY,
+                        phone: "",
+                      };
+                      dispatch && dispatch(addPromptPayAction);
+                    }}
                   ></img>
                 ) : (
                   <VscDiffAdded className="w-10 h-10" />
